@@ -1,0 +1,111 @@
+<mujoco model="scene_task_v2">
+    <!-- Phase 0 step 4 task scene, VERSION 2 (SWAYAM_TASK_VERSION=2): identical to
+         scene_task.xml except that the outer funnel is 4 mm per side instead of 8 mm.
+         Reason: v1 scored 10/10 and its prediction file says a >= 9 result means the
+         funnel must shrink or the weld's forgiveness go; CLAUDE.md lets a fit tighten
+         once it is inside the error budget (the sim arm places within 0.5 mm, and the
+         optional placement noise is 2 mm RMS, so a 4 mm funnel is still 2x the error).
+         The grasp rule is also stricter in v2 (see swayam.arm.sim).
+
+         Official SO-101 + a 20 mm printed cube on a "printer bed" region + a kit tray
+         with one slot. Frame = arm base frame (metres here; the MCP tools report mm
+         and degrees).
+
+         Parameters (mm):
+           CUBE            20 x 20 x 20, mass 10 g
+           BED centre      (200, +90), 80 x 80 visual region on the table
+           TRAY centre     (200, -90), 80 x 80 x 12 block
+           POCKET          22 x 22 (1.0 mm clearance per side), 10 deep, floor at z = 2
+                           -> seated cube centre at z = 12  (site "slot_centre")
+           INNER LEAD-IN   1.5 mm per side at 45 deg   (z 12.0 -> 13.5)   [CLAUDE.md: >= 1.5]
+           OUTER FUNNEL    4.0 mm per side at 45 deg   (z 13.5 -> 17.5)   [v1: 8.0]
+                           -> funnel mouth half-width 16.5 mm at z = 17.5
+         The two stages have the same angle, so each side is one 45 deg chamfer geom
+         running from half-width 11 mm at z 12 to 16.5 mm at z 17.5.
+
+         Collision classes (bitmasks): arm links 1/1 (model default); the gripper and
+         moving-jaw hulls are set to 4/4 by SimArm (their convex hulls are far fatter
+         than the real fingers and would shove the cube); table, ground and tray 7/7;
+         cube 3/3, switched to 2/2 while held so it rests on table and tray but never
+         contacts the arm (see swayam.arm.sim).
+         The table top is named "floor" because SimArm aborts a move on contact with
+         the geom of that name (same behaviour as the plain scene).
+    -->
+    <include file="so101_new_calib.xml" />
+
+    <visual>
+        <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0" />
+        <rgba haze="0.15 0.25 0.35 1" />
+        <global azimuth="160" elevation="-20" />
+    </visual>
+
+    <asset>
+        <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512"
+            height="3072" />
+        <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4"
+            rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="300" height="300" />
+        <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5"
+            reflectance="0.2" />
+        <material name="tray_mat" rgba="0.55 0.55 0.6 1" />
+        <material name="cube_mat" rgba="0.9 0.25 0.2 1" />
+    </asset>
+
+    <worldbody>
+        <light pos="0 0 3.5" dir="0 0 -1" directional="true" />
+
+        <!-- table top: 700 x 700 mm, top face at z = 0; the ground is 300 mm below, so a
+             cube pushed off the edge falls and is gone (irrecoverable event) -->
+        <geom name="floor" type="box" size="0.35 0.35 0.01" pos="0.2 0 -0.01"
+            contype="7" conaffinity="7" material="groundplane" />
+        <geom name="ground" type="plane" size="0 0 0.05" pos="0 0 -0.3"
+            contype="7" conaffinity="7" rgba="0.1 0.1 0.1 1" />
+
+        <!-- printer bed: a visual-only 80 x 80 mm region (the cube rests on the table) -->
+        <geom name="bed" type="box" size="0.04 0.04 0.0002" pos="0.2 0.09 0.0002"
+            contype="0" conaffinity="0" rgba="0.15 0.15 0.15 1" />
+
+        <!-- kit tray with one slot -->
+        <body name="tray" pos="0.2 -0.09 0">
+            <geom name="tray_floor" type="box" size="0.04 0.04 0.001" pos="0 0 0.001"
+                contype="7" conaffinity="7" friction="0.4" material="tray_mat" />
+            <!-- pocket walls, z 2..12, inner half-width 11 mm -->
+            <geom name="tray_wall_px" type="box" size="0.0145 0.04 0.005" pos="0.0255 0 0.007"
+                contype="7" conaffinity="7" friction="0.4" material="tray_mat" />
+            <geom name="tray_wall_nx" type="box" size="0.0145 0.04 0.005" pos="-0.0255 0 0.007"
+                contype="7" conaffinity="7" friction="0.4" material="tray_mat" />
+            <geom name="tray_wall_py" type="box" size="0.011 0.0145 0.005" pos="0 0.0255 0.007"
+                contype="7" conaffinity="7" friction="0.4" material="tray_mat" />
+            <geom name="tray_wall_ny" type="box" size="0.011 0.0145 0.005" pos="0 -0.0255 0.007"
+                contype="7" conaffinity="7" friction="0.4" material="tray_mat" />
+            <!-- lead-in + funnel: 45 deg chamfers from half-width 11 @ z12 to 16.5 @ z17.5.
+                 Each is a 2 mm thick box whose inner face lies on that line
+                 (half-length 5.5*sqrt2/2 = 3.889 mm; centre = line midpoint (13.75, 14.75)
+                 pushed 1 mm outward-down along (1,-1)/sqrt2). -->
+            <geom name="funnel_px" type="box" size="0.003889 0.022 0.001" pos="0.014457 0 0.014043"
+                euler="0 -45 0" contype="7" conaffinity="7" friction="0.4" material="tray_mat" />
+            <geom name="funnel_nx" type="box" size="0.003889 0.022 0.001" pos="-0.014457 0 0.014043"
+                euler="0 45 0" contype="7" conaffinity="7" friction="0.4" material="tray_mat" />
+            <geom name="funnel_py" type="box" size="0.022 0.003889 0.001" pos="0 0.014457 0.014043"
+                euler="45 0 0" contype="7" conaffinity="7" friction="0.4" material="tray_mat" />
+            <geom name="funnel_ny" type="box" size="0.022 0.003889 0.001" pos="0 -0.014457 0.014043"
+                euler="-45 0 0" contype="7" conaffinity="7" friction="0.4" material="tray_mat" />
+            <!-- where the cube centre sits when seated in the pocket -->
+            <site name="slot_centre" pos="0 0 0.012" size="0.002" rgba="0 1 0 0.5" />
+        </body>
+
+        <!-- the part: 20 mm cube, spawned on the bed (pose re-seeded by SimArm) -->
+        <body name="cube" pos="0.2 0.09 0.0101">
+            <freejoint name="cube" />
+            <geom name="cube" type="box" size="0.01 0.01 0.01" mass="0.010"
+                contype="3" conaffinity="3" friction="0.4" material="cube_mat" />
+        </body>
+    </worldbody>
+
+    <equality>
+        <!-- SIMPLIFIED GRASP (not a physics measurement): activated by SimArm when the
+             gripper is commanded below 20 % open AND (task version 2) the jaws were
+             wider than the cube, the cube lay between the finger pads and it was within
+             10 deg of flat; released when the gripper opens. See swayam.arm.sim. -->
+        <weld name="grasp" body1="gripper" body2="cube" active="false" />
+    </equality>
+</mujoco>

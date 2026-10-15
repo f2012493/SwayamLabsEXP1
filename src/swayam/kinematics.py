@@ -15,6 +15,7 @@ from swayam import GRIPPER, JOINTS, REPO_ROOT
 SCENES = {
     "plain": REPO_ROOT / "sim" / "so101" / "scene.xml",  # arm + floor only
     "task": REPO_ROOT / "sim" / "so101" / "scene_task.xml",  # + cube on bed + kit tray slot
+    "task_v2": REPO_ROOT / "sim" / "so101" / "scene_task_v2.xml",  # same, 4 mm funnel (task version 2)
 }
 SCENE_PATH = SCENES["plain"]
 GRIPPER_SITE = "gripperframe"

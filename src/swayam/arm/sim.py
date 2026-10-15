@@ -6,11 +6,28 @@ SWAYAM_SCENE=task. The cube spawn is seeded (SWAYAM_CUBE_SEED or cube_seed=).
 
 SIMPLIFIED GRASP - NOT A PHYSICS MEASUREMENT
 MuJoCo two-finger mesh contacts are unreliable and grasp physics is not what the
-task scene measures. So in the task scene, when the gripper is commanded below
-GRASP_CLOSE_PCT and the cube centre is within GRASP_RADIUS_M of the gripperframe
-site, the cube is welded to the gripper body (equality "grasp") and cube-arm contacts
-are switched off; an open command releases it. Grasp success on hardware is a
-separate Phase 0 measurement.
+task scene measures. So in the task scene a close command below GRASP_CLOSE_PCT
+welds the cube to the gripper body (equality "grasp") and switches cube-arm contacts
+off; an open command releases it. Grasp success on hardware is a separate Phase 0
+measurement. Two versions of the rule exist (SWAYAM_TASK_VERSION, default 1):
+
+  v1  the cube centre is within GRASP_RADIUS_M (15 mm) of the gripperframe site.
+      Nothing else is checked: v1 grasped a wedged, 34 deg tilted cube with the jaws
+      40 % open (studies/out/sim_pick_place_zero_shot.md).
+  v2  all of, evaluated in the gripperframe site frame at the moment of the command
+      (x = approach axis, y = across the finger pads, z = jaw axis from the fixed-jaw
+      face towards the moving jaw):
+        - the jaws are being closed from a gap wider than the part: the moving-jaw
+          pad's lowest point is more than CUBE_SIZE_MM above the fixed-jaw face;
+        - the cube body lies between the pads along the jaw axis (its centre is in
+          [CUBE/2 - JAW_PENETRATION_MM, gap - CUBE/2 + JAW_PENETRATION_MM]);
+        - the cube centre is over the pads: |y| <= FINGER_HALF_WIDTH_MM and
+          PAD_X_MIN_MM <= x <= PAD_X_MAX_MM (finger root to fixed-jaw tip);
+        - the cube is within FLAT_TOL_DEG of flat on the table (one face normal
+          within 10 deg of vertical).
+      Still a simplified grasp: no contact forces, no slip, no finger compliance; the
+      jaw gap comes from the model's own moving-jaw mesh. Scene v2 also has a 4 mm
+      outer funnel (sim/so101/scene_task_v2.xml) instead of 8 mm.
 """
 
 from __future__ import annotations
@@ -48,11 +65,32 @@ CUBE_FREE_CONTYPE = 3  # also collides with arm links (1), never with the grippe
 GRIPPER_HULL_CONTYPE = 4  # see scene_task.xml: jaw mesh hulls are too fat to touch the cube
 OFF_TABLE_Z_M = -0.05
 
+# task version 2 grasp rule (mm / deg; measured from the official model, see docstring)
+FINGER_HALF_WIDTH_MM = 7.0  # finger pads are 10-14 mm wide along the site y axis
+PAD_X_MIN_MM = -45.0  # finger root (the jaws still clamp a 20 mm part there)
+PAD_X_MAX_MM = 6.3  # fixed-jaw tip
+JAW_PENETRATION_MM = 2.0  # the cube may overlap a pad by this much (pads do not collide with it)
+FLAT_TOL_DEG = 10.0
+# funnel numbers reported by get_scene per task version (must match the scene files)
+FUNNEL = {1: {"funnel_top_z_mm": 21.5, "funnel_half_width_mm": 20.5, "outer_funnel_mm": 8.0},
+          2: {"funnel_top_z_mm": 17.5, "funnel_half_width_mm": 16.5, "outer_funnel_mm": 4.0}}
+SCENE_FILE = {1: "task", 2: "task_v2"}
+
+
+def task_version(explicit: int | None = None) -> int:
+    v = int(explicit if explicit is not None else os.environ.get("SWAYAM_TASK_VERSION", "1"))
+    if v not in SCENE_FILE:
+        raise ValueError(f"SWAYAM_TASK_VERSION must be one of {sorted(SCENE_FILE)}, got {v}")
+    return v
+
 
 class SimArm:
-    def __init__(self, scene: str | None = None, cube_seed: int | None = None):
+    def __init__(self, scene: str | None = None, cube_seed: int | None = None,
+                 task_version: int | None = None):
         self.scene_name = scene or os.environ.get("SWAYAM_SCENE", "plain")
-        self.model = load_model(self.scene_name)
+        self.task_version = globals()["task_version"](task_version)
+        self.scene_file = SCENE_FILE[self.task_version] if self.scene_name == "task" else self.scene_name
+        self.model = load_model(self.scene_file)
         self.data = mujoco.MjData(self.model)
         self._qadr = {n: self.model.jnt_qposadr[self.model.joint(n).id] for n in ALL}
         self._act = {n: self.model.actuator(n).id for n in ALL}
@@ -73,6 +111,8 @@ class SimArm:
             self._cube_v = self.model.jnt_dofadr[self.model.joint("cube").id]
             self._slot_site = self.model.site("slot_centre").id
             self._weld = self.model.equality("grasp").id
+            self._moving_jaw = self.model.body("moving_jaw_so101_v1").id
+            self._pad_verts = self._find_moving_pad()
             for g in range(self.model.ngeom):
                 if self.model.geom_bodyid[g] in (self._gripper_body, self.model.body("moving_jaw_so101_v1").id) \
                         and self.model.geom_contype[g]:
@@ -186,6 +226,75 @@ class SimArm:
         self._settle(0.5)
         return self.scene()["cube"]
 
+    # ---- task v2 grasp geometry ------------------------------------------------------
+    def _moving_jaw_mesh(self) -> tuple[int, np.ndarray]:
+        """(collision geom id, local vertices) of the moving-jaw mesh."""
+        for g in range(self.model.ngeom):
+            if self.model.geom_bodyid[g] == self._moving_jaw and self.model.geom_contype[g] \
+                    and self.model.geom_type[g] == mujoco.mjtGeom.mjGEOM_MESH:
+                mid = self.model.geom_dataid[g]
+                a, n = self.model.mesh_vertadr[mid], self.model.mesh_vertnum[mid]
+                return g, self.model.mesh_vert[a:a + n]
+        raise RuntimeError("moving jaw collision mesh not found")
+
+    def _mesh_in_site_frame(self, geom: int, verts: np.ndarray, data: mujoco.MjData) -> np.ndarray:
+        world = verts @ data.geom_xmat[geom].reshape(3, 3).T + data.geom_xpos[geom]
+        R = data.site_xmat[self._site].reshape(3, 3)
+        return (world - data.site_xpos[self._site]) @ R
+
+    def _find_moving_pad(self) -> np.ndarray:
+        """Indices of the moving-jaw vertices that form its contact pad: the vertices that
+        sit within 6 mm of the fixed-jaw face, over the front 14 mm of the finger, when
+        the gripper is fully closed. Evaluated on a scratch copy so the scene is untouched."""
+        g, verts = self._moving_jaw_mesh()
+        scratch = mujoco.MjData(self.model)
+        scratch.qpos[:] = self.data.qpos
+        scratch.qpos[self._qadr[GRIPPER]] = self.model.jnt_range[self.model.joint(GRIPPER).id][0]
+        mujoco.mj_kinematics(self.model, scratch)
+        v = self._mesh_in_site_frame(g, verts, scratch)
+        idx = np.where((v[:, 2] < 0.006) & (np.abs(v[:, 1]) < 0.008) & (v[:, 0] > -0.009) & (v[:, 0] < 0.005))[0]
+        assert len(idx) > 100, len(idx)
+        return idx
+
+    def jaw_gap_mm(self) -> float:
+        """Height of the moving-jaw pad's lowest point above the fixed-jaw face (site z),
+        at the current opening: 1.9 mm closed, ~31 mm at 20 % open, ~98 mm fully open."""
+        g, verts = self._moving_jaw_mesh()
+        v = self._mesh_in_site_frame(g, verts[self._pad_verts], self.data)
+        return float(v[:, 2].min() * 1000)
+
+    def cube_in_site_frame(self) -> np.ndarray:
+        """Cube centre in the gripperframe site frame (mm)."""
+        R = self.data.site_xmat[self._site].reshape(3, 3)
+        return R.T @ (self.data.xpos[self._cube_body] - self.data.site_xpos[self._site]) * 1000
+
+    def cube_tilt_deg(self) -> float:
+        """Angle between the cube's most vertical face normal and world z (0 = flat)."""
+        Rc = self.data.xmat[self._cube_body].reshape(3, 3)
+        return math.degrees(math.acos(min(1.0, float(np.max(np.abs(Rc[2, :]))))))
+
+    def grasp_check_v2(self) -> tuple[bool, str, dict]:
+        """Apply the v2 rule to the current state; (ok, reason, numbers)."""
+        gap = self.jaw_gap_mm()
+        x, y, z = (float(v) for v in self.cube_in_site_frame())
+        tilt = self.cube_tilt_deg()
+        half = CUBE_SIZE_MM / 2
+        info = {"jaw_gap_mm": round(gap, 1), "cube_in_jaw_frame_mm": [round(x, 1), round(y, 1), round(z, 1)],
+                "cube_tilt_deg": round(tilt, 1)}
+        problems = []
+        if gap <= CUBE_SIZE_MM:
+            problems.append(f"jaws closing from a {gap:.0f} mm gap, not wider than the {CUBE_SIZE_MM:.0f} mm part")
+        if not (half - JAW_PENETRATION_MM <= z <= gap - half + JAW_PENETRATION_MM):
+            problems.append(f"cube centre {z:.1f} mm along the jaw axis, not between the pads "
+                            f"[{half - JAW_PENETRATION_MM:.0f}, {gap - half + JAW_PENETRATION_MM:.0f}]")
+        if abs(y) > FINGER_HALF_WIDTH_MM:
+            problems.append(f"cube centre {y:.1f} mm across the pads, limit +-{FINGER_HALF_WIDTH_MM:.0f}")
+        if not (PAD_X_MIN_MM <= x <= PAD_X_MAX_MM):
+            problems.append(f"cube centre {x:.1f} mm along the fingers, pads span [{PAD_X_MIN_MM:.0f}, {PAD_X_MAX_MM:.1f}]")
+        if tilt > FLAT_TOL_DEG:
+            problems.append(f"cube tilted {tilt:.0f} deg, limit {FLAT_TOL_DEG:.0f}")
+        return not problems, "; ".join(problems), info
+
     def _cube_pose(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         pos = self.data.xpos[self._cube_body].copy()
         w, x, y, z = self.data.xquat[self._cube_body]
@@ -217,9 +326,10 @@ class SimArm:
                 "pocket_mm": 22.0,
                 "pocket_depth_mm": 10.0,
                 "pocket_yaw_deg": 0.0,
-                "funnel_top_z_mm": 21.5,
-                "funnel_half_width_mm": 20.5,
+                "lead_in_mm": 1.5,
+                **FUNNEL[self.task_version],
             },
+            "task_version": self.task_version,
             "bed": {"centre_xy_mm": [v * 1000 for v in BED_CENTRE_M], "half_size_mm": BED_HALF_M * 1000},
             "gripper": {
                 "site_xyz_mm": [round(float(v) * 1000, 2) for v in site],
@@ -251,12 +361,18 @@ class SimArm:
 
     def _grasp_logic(self, gripper_target_pct: float) -> str | None:
         if gripper_target_pct < GRASP_CLOSE_PCT and not self.held:
-            pos, _, _ = self._cube_pose()
-            dist = float(np.linalg.norm(pos - self.data.site_xpos[self._site]))
-            if dist <= GRASP_RADIUS_M:
+            if self.task_version == 1:
+                pos, _, _ = self._cube_pose()
+                dist = float(np.linalg.norm(pos - self.data.site_xpos[self._site]))
+                if dist <= GRASP_RADIUS_M:
+                    self._grasp()
+                    return "grasped"
+                return f"close: cube {dist * 1000:.1f} mm from gripper site, no grasp (limit {GRASP_RADIUS_M * 1000:.0f} mm)"
+            ok, why, info = self.grasp_check_v2()
+            if ok:
                 self._grasp()
                 return "grasped"
-            return f"close: cube {dist * 1000:.1f} mm from gripper site, no grasp (limit {GRASP_RADIUS_M * 1000:.0f} mm)"
+            return f"close: no grasp ({why}); {info}"
         if gripper_target_pct >= GRASP_CLOSE_PCT and self.held:
             self._release()
             return "released"
