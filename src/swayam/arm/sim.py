@@ -55,6 +55,8 @@ GRASP_CLOSE_PCT = 20.0
 GRASP_RADIUS_M = 0.015
 SLOT_TOL_M = 0.003  # verifier: cube centre within 3 mm of the slot centre
 SLOT_REST_SPEED_M_S = 0.005  # ... and moving slower than 5 mm/s
+SLOT_TILT_TOL_DEG = 5.0  # ... and its most vertical face normal within 5 deg of vertical
+SLOT_HEIGHT_TOL_M = 0.001  # ... and its centre within 1 mm of the slot centre height
 CUBE_SIZE_MM = 20.0
 BED_CENTRE_M = (0.200, 0.090)
 BED_HALF_M = 0.040
@@ -82,6 +84,17 @@ def task_version(explicit: int | None = None) -> int:
     if v not in SCENE_FILE:
         raise ValueError(f"SWAYAM_TASK_VERSION must be one of {sorted(SCENE_FILE)}, got {v}")
     return v
+
+
+def in_slot_rule(distance_mm: float, speed_mm_s: float, held: bool,
+                 tilt_deg: float, height_error_mm: float) -> bool:
+    """The verifier rule on already-measured numbers (also applied to logged scenes by
+    the experiment reports, so the two can never disagree). A jammed cube can sit within
+    3 mm of the slot centre; the tilt and height terms are what separate it from a
+    seated one (studies/out/sim_pick_place_zero_shot_v2.md, audit rows 5d and 10)."""
+    return (distance_mm <= SLOT_TOL_M * 1000 and speed_mm_s <= SLOT_REST_SPEED_M_S * 1000
+            and not held and tilt_deg <= SLOT_TILT_TOL_DEG
+            and abs(height_error_mm) <= SLOT_HEIGHT_TOL_M * 1000)
 
 
 class SimArm:
@@ -340,19 +353,27 @@ class SimArm:
         }
 
     def cube_in_slot(self) -> dict:
-        """The verifier. True only if the cube centre is within SLOT_TOL_M of the slot
-        centre, moving slower than SLOT_REST_SPEED_M_S, and not held."""
+        """The verifier (both task versions). True only if the cube centre is within
+        SLOT_TOL_M of the slot centre, moving slower than SLOT_REST_SPEED_M_S, not held,
+        tilted no more than SLOT_TILT_TOL_DEG and within SLOT_HEIGHT_TOL_M of the slot
+        centre height. Every number the decision used is returned alongside it."""
         pos, _, vel = self._cube_pose()
         slot = self.data.site_xpos[self._slot_site]
         dist = float(np.linalg.norm(pos - slot))
         speed = float(np.linalg.norm(vel[:3]))
-        ok = dist <= SLOT_TOL_M and speed <= SLOT_REST_SPEED_M_S and not self.held
+        tilt = self.cube_tilt_deg()
+        dz = float(pos[2] - slot[2])
+        ok = in_slot_rule(dist * 1000, speed * 1000, self.held, tilt, dz * 1000)
         return {
             "in_slot": ok,
             "distance_mm": round(dist * 1000, 2),
             "tolerance_mm": SLOT_TOL_M * 1000,
             "speed_mm_s": round(speed * 1000, 2),
             "held_by_gripper": self.held,
+            "tilt_deg": round(tilt, 2),
+            "tilt_tolerance_deg": SLOT_TILT_TOL_DEG,
+            "height_error_mm": round(dz * 1000, 2),
+            "height_tolerance_mm": SLOT_HEIGHT_TOL_M * 1000,
         }
 
     def _set_cube_contacts(self, cls: int) -> None:

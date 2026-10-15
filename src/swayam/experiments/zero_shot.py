@@ -13,12 +13,15 @@ subject's own account of what happened.
     uv run python -m swayam.experiments.zero_shot --attempts 10                    # task v1
     uv run python -m swayam.experiments.zero_shot --condition v2 --attempts 10     # task v2
     uv run python -m swayam.experiments.zero_shot --condition v2-noise --attempts 10
+    uv run python -m swayam.experiments.zero_shot --condition v2-noise-heldout --attempts 10 --start 10
     uv run python -m swayam.experiments.zero_shot --report <stamp>   # rebuild the v1 report only
     uv run python -m swayam.experiments.zero_shot --report-v2        # rebuild the v2 report
 
 Conditions (CONDITIONS): "v1" is the 2026-10-15 baseline (8 mm funnel, 15 mm weld);
 "v2" is task version 2 (4 mm funnel, geometric grasp rule, see swayam.arm.sim);
-"v2-noise" is v2 plus a seeded 2 mm RMS xy placement error on every move_gripper_to.
+"v2-noise" is v2 plus a seeded 2 mm RMS xy placement error on every move_gripper_to;
+"v2-noise-heldout" is the same condition on fresh seeds, reported by
+swayam.experiments.pre_release_signal (predictions/2026-10-15-pre-release-tilt-signal.md).
 Prediction for v2: predictions/2026-10-15-sim-pick-place-zero-shot-v2.md.
 """
 
@@ -65,6 +68,11 @@ CONDITIONS = {
            "tag": "zero-shot-v2"},
     "v2-noise": {"task_version": 2, "noise_mm": 2.0,
                  "out_dir": REPO_ROOT / "studies" / "out" / "zero_shot_v2_noise", "tag": "zero-shot-v2n"},
+    # the same condition on fresh seeds, kept in its own folder and tag family so the audited
+    # seeds 0-9 report is never rebuilt with extra attempts; scored by pre_release_signal
+    "v2-noise-heldout": {"task_version": 2, "noise_mm": 2.0,
+                         "out_dir": REPO_ROOT / "studies" / "out" / "zero_shot_v2_noise_heldout",
+                         "tag": "zero-shot-v2nh"},
 }
 
 
@@ -514,6 +522,10 @@ def main() -> None:
         records.append(rec)
     if args.condition == "v1":
         write_report(records, stamp)
+    elif args.condition == "v2-noise-heldout":
+        from swayam.experiments.pre_release_signal import load_rows, write_report as write_signal_report
+
+        print(write_signal_report(load_rows()))
     else:
         write_report_v2()
 

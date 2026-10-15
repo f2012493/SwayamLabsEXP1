@@ -13,7 +13,11 @@ from swayam.arm.sim import (
     FLAT_TOL_DEG,
     FUNNEL,
     GRASP_RADIUS_M,
+    SLOT_HEIGHT_TOL_M,
+    SLOT_TILT_TOL_DEG,
+    SLOT_TOL_M,
     SimArm,
+    in_slot_rule,
     task_version,
 )
 from swayam.ik import IK
@@ -236,3 +240,142 @@ def test_harness_tilt_matches_sim():
     assert CONDITIONS["v2"]["task_version"] == 2 and CONDITIONS["v2-noise"]["noise_mm"] == 2.0
     assert CONDITIONS["v1"]["task_version"] == 1 and CONDITIONS["v1"]["noise_mm"] == 0
     assert FUNNEL[2]["outer_funnel_mm"] == 4.0
+
+
+# ---- tilt- and height-aware verifier ------------------------------------------------------
+
+# Final logged cube poses of the four jammed attempts (runs/2026-10-15.jsonl, last tool_call
+# of each run tag). Under the old distance-only rule they failed by ~1 mm; under the new rule
+# they fail on tilt and height as well.
+JAM_POSES = {
+    "zero-shot-v2-20261015-202023-05": ([198.44, -90.23, 15.81], [-0.0, -32.73, 0.0]),
+    "zero-shot-v2-20261015-202023-09": ([198.74, -86.14, 19.84], [-33.41, -30.82, 18.67]),
+    "zero-shot-v2n-20261015-221203-00": ([198.44, -90.27, 15.81], [32.73, 0.0, -90.0]),
+    "zero-shot-v2n-20261015-221203-02": ([198.44, -90.92, 15.81], [-0.0, -32.73, 0.0]),
+}
+
+
+def _quat_from_rpy(rpy_deg):
+    """ZYX roll/pitch/yaw -> (w, x, y, z), the inverse of SimArm._cube_pose."""
+    r, p, y = (math.radians(v) / 2 for v in rpy_deg)
+    cr, sr, cp, sp, cy, sy = math.cos(r), math.sin(r), math.cos(p), math.sin(p), math.cos(y), math.sin(y)
+    return [cy * cp * cr + sy * sp * sr, cy * cp * sr - sy * sp * cr,
+            sy * cp * sr + cy * sp * cr, sy * cp * cr - cy * sp * sr]
+
+
+def _place_cube(arm, xyz_mm, rpy_deg):
+    """Pose probe: put the free cube at a logged pose with zero velocity, no settling."""
+    q = arm._cube_q
+    arm.data.qpos[q:q + 3] = [v / 1000 for v in xyz_mm]
+    arm.data.qpos[q + 3:q + 7] = _quat_from_rpy(rpy_deg)
+    arm.data.qvel[arm._cube_v:arm._cube_v + 6] = 0
+    mujoco.mj_forward(arm.model, arm.data)
+
+
+def test_jam_poses_in_test_match_the_run_log():
+    """Keep the hard-coded poses honest against the append-only evidence (if present)."""
+    from swayam import REPO_ROOT
+
+    log = REPO_ROOT / "runs" / "2026-10-15.jsonl"
+    if not log.exists():
+        pytest.skip("runs/2026-10-15.jsonl not present")
+    import json
+
+    last = {}
+    for line in log.read_text().splitlines():
+        r = json.loads(line)
+        if r.get("event") == "tool_call" and r.get("run_tag") in JAM_POSES:
+            last[r["run_tag"]] = r
+    assert set(last) == set(JAM_POSES)
+    for tag, (xyz, rpy) in JAM_POSES.items():
+        cube = last[tag]["scene"]["cube"]
+        assert cube["xyz_mm"] == xyz and cube["rpy_deg"] == rpy, tag
+        assert last[tag]["verifier"]["in_slot"] is False and last[tag]["verifier"]["distance_mm"] > SLOT_TOL_M * 1000
+
+
+@pytest.mark.parametrize("version", [1, 2])
+def test_logged_jam_poses_fail_the_verifier_on_tilt_and_height(version):
+    arm = SimArm(scene="task", cube_seed=0, task_version=version)
+    for tag, (xyz, rpy) in JAM_POSES.items():
+        _place_cube(arm, xyz, rpy)
+        pos, back, _ = arm._cube_pose()
+        assert max(abs(a - b) for a, b in zip(back, rpy)) < 0.02, (tag, back)  # pose round-trips
+        v = arm.cube_in_slot()
+        assert v["in_slot"] is False, (tag, v)
+        assert v["distance_mm"] > SLOT_TOL_M * 1000, (tag, v)  # failed under the old rule too
+        assert v["tilt_deg"] > SLOT_TILT_TOL_DEG, (tag, v)
+        assert v["height_error_mm"] > SLOT_HEIGHT_TOL_M * 1000, (tag, v)
+        assert abs(v["tilt_deg"] - 32.73) < 0.05 or abs(v["tilt_deg"] - 44.2) < 0.2, (tag, v)
+
+
+@pytest.mark.parametrize("version", [1, 2])
+def test_seated_cube_passes_and_the_new_terms_bite_inside_3_mm(version):
+    arm = SimArm(scene="task", cube_seed=0, task_version=version)
+    sx, sy, sz = arm.scene()["slot"]["centre_xyz_mm"]
+    # dropped in from just above the pocket and allowed to settle: seated
+    _place_cube(arm, [sx, sy, sz + 3], [0, 0, 0])
+    arm._settle(1.0)
+    v = arm.cube_in_slot()
+    assert v["in_slot"] is True, v
+    assert v["tilt_deg"] < 0.5 and abs(v["height_error_mm"]) < 0.5 and v["distance_mm"] < 1, v
+    assert v["tilt_tolerance_deg"] == SLOT_TILT_TOL_DEG and v["height_tolerance_mm"] == SLOT_HEIGHT_TOL_M * 1000
+    # same centre, tilted just past the limit: within 3 mm, at height, yet not seated
+    _place_cube(arm, [sx, sy, sz], [0, SLOT_TILT_TOL_DEG + 1, 0])
+    v = arm.cube_in_slot()
+    assert v["distance_mm"] < 0.01 and abs(v["height_error_mm"]) < 0.01 and v["in_slot"] is False, v
+    _place_cube(arm, [sx, sy, sz], [0, SLOT_TILT_TOL_DEG - 1, 0])
+    assert arm.cube_in_slot()["in_slot"] is True
+    # flat and centred in xy but 1.5 mm high: within 3 mm, yet not seated
+    _place_cube(arm, [sx, sy, sz + 1.5], [0, 0, 0])
+    v = arm.cube_in_slot()
+    assert v["distance_mm"] < 1.51 and v["tilt_deg"] < 0.01 and v["in_slot"] is False, v
+    _place_cube(arm, [sx, sy, sz + 0.5], [0, 0, 0])
+    assert arm.cube_in_slot()["in_slot"] is True
+    # the pure rule agrees with the method on the same numbers
+    assert in_slot_rule(0.0, 0.0, False, SLOT_TILT_TOL_DEG, SLOT_HEIGHT_TOL_M * 1000) is True
+    assert in_slot_rule(0.0, 0.0, False, SLOT_TILT_TOL_DEG + 0.01, 0.0) is False
+    assert in_slot_rule(0.0, 0.0, False, 0.0, -(SLOT_HEIGHT_TOL_M * 1000 + 0.01)) is False
+    assert in_slot_rule(0.0, 0.0, True, 0.0, 0.0) is False
+
+
+def test_verifier_docstring_names_the_new_terms():
+    from swayam import mcp_server
+
+    tools = {t.name: t for t in asyncio.run(mcp_server.mcp.list_tools())}
+    d = tools["is_cube_in_slot"].description
+    assert "5 deg" in d and "1 mm" in d and "jammed" in d
+
+
+def test_pre_release_rule_and_logged_verifier_recompute():
+    from swayam.experiments.pre_release_signal import (
+        PRE_RELEASE_TILT_DEG,
+        PRE_RELEASE_XY_MM,
+        rule_fires,
+        verifier_from_scene,
+    )
+
+    def scene(xyz, rpy, held=False, speed=0.0):
+        return {"cube": {"xyz_mm": xyz, "rpy_deg": rpy, "speed_mm_s": speed, "held_by_gripper": held},
+                "slot": {"centre_xyz_mm": [200.0, -90.0, 12.0]}}
+
+    assert PRE_RELEASE_TILT_DEG == 1.0 and PRE_RELEASE_XY_MM == 1.0
+    # v2n seed 0 pre-release: flat, underside 0.02 mm above the pocket top -> the rule does not fire
+    assert rule_fires(scene([200.9, -91.0, 22.02], [0.03, 0.0, -90.0], held=True))[0] is False
+    # v2 seed 9 pre-release: tilted 3.68 deg, underside 11.74 mm, 1.72 mm off -> both clauses fire
+    fires, why = rule_fires(scene([201.0, -91.4, 21.74], [3.68, 0.0, 0.0], held=True))
+    assert fires and why["tilted"] and why["low_and_off_centre"]
+    # tilted alone, well above the pocket
+    fires, why = rule_fires(scene([200.0, -90.0, 30.0], [3.68, 0.0, 0.0], held=True))
+    assert fires and why["tilted"] and not why["low_and_off_centre"]
+    # flat, pressed to the pocket top, 1.5 mm off centre -> fires on the height/xy clause
+    fires, why = rule_fires(scene([201.5, -90.0, 22.0], [0.0, 0.0, 0.0], held=True))
+    assert fires and why["low_and_off_centre"] and not why["tilted"]
+    # the same but centred within 1 mm -> does not fire
+    assert rule_fires(scene([200.5, -90.0, 22.0], [0.0, 0.0, 0.0], held=True))[0] is False
+    # logged jam pose: old rule and new rule both fail; seated pose: both pass; tilted inside 3 mm: only new fails
+    jam = verifier_from_scene(scene(*JAM_POSES["zero-shot-v2-20261015-202023-05"]))
+    assert jam["in_slot"] is False and jam["old_rule"] is False and jam["tilt_deg"] == 32.73
+    seated = verifier_from_scene(scene([199.99, -89.86, 11.99], [0.0, 0.0, -0.84]))
+    assert seated["in_slot"] is True and seated["old_rule"] is True
+    leaning = verifier_from_scene(scene([200.0, -90.0, 12.0], [0.0, 6.0, 0.0]))
+    assert leaning["old_rule"] is True and leaning["in_slot"] is False

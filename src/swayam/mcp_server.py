@@ -201,8 +201,10 @@ get_scene = tool(get_scene)
 @tool
 def is_cube_in_slot() -> dict:
     """The task verifier: true only when the cube centre is within 3 mm of the slot
-    centre, moving slower than 5 mm/s, and released by the gripper. This decides
-    success; nothing else does."""
+    centre, moving slower than 5 mm/s, released by the gripper, within 5 deg of flat
+    (one face normal within 5 deg of vertical) and at the seated height (centre within
+    1 mm of the slot centre z). A cube jammed tilted in the pocket mouth fails. This
+    decides success; nothing else does."""
     sim = _sim()
     if sim is None:
         return {"error": "no verifier on this backend"}
