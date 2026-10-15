@@ -1,0 +1,40 @@
+{
+ "attempt": 29,
+ "seed": 29,
+ "run_tag": "zero-shot-v2nh-20261015-233831-29",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise-heldout",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792088905.599842,
+ "wall_s": 96.1,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 18,
+  "duration_ms": 94244,
+  "duration_api_ms": 91295,
+  "total_cost_usd": 0.8062554999999999,
+  "is_error": false,
+  "result": "The verifier passes. The cube is seated in the tray slot.\n\nResult from the verifier:\n\n| Check | Value | Tolerance |\n|---|---|---|\n| Distance from slot centre | 0.33 mm | 3 mm |\n| Tilt | 0.0 deg | 5 deg |\n| Height error | -0.01 mm | 1 mm |\n| Speed | 0 mm/s | 5 mm/s |\n| Held by gripper | no | must be released |\n\nWhat I did:\n\n- **Grasp:** opened the gripper, set the wrist roll so the jaws closed across the cube's faces, descended top-down to the cube centre height, and closed. The sim reported a successful grasp.\n- **Carry:** lifted to 70 mm, moved over the slot, and re-set the wrist roll so the cube's yaw matched the pocket. The cube measured well under a degree of yaw before release.\n- **Place:** descended slowly until the cube bottom sat inside the funnel, then released. The cube slid down and seated flat in the pocket.\n\nOne thing worth knowing for future runs: the jaw axis angle in the base frame equals wrist roll minus shoulder pan, so the roll has to be recomputed at each location to keep the cube's yaw aligned with the pocket.\n\nThe arm is still parked above the slot with the gripper open. I have not sent it home, since the task said to stop once the verifier passes.",
+  "session_id": "e2eb7692-8eb1-4cca-87d7-c6c566d20bdb",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 418,
+    "outputTokens": 6274,
+    "cacheReadInputTokens": 225502,
+    "cacheCreationInputTokens": 21600,
+    "webSearchRequests": 0,
+    "costUSD": 0.8062554999999999,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 3921,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

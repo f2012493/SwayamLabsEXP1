@@ -1,0 +1,40 @@
+{
+ "attempt": 25,
+ "seed": 25,
+ "run_tag": "zero-shot-v2nh-20261015-233831-25",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise-heldout",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792088465.2514,
+ "wall_s": 75.5,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 16,
+  "duration_ms": 73755,
+  "duration_api_ms": 71341,
+  "total_cost_usd": 0.6492195000000001,
+  "is_error": false,
+  "result": "The verifier passes. The cube is seated in the tray slot and I have stopped, as asked.\n\nVerifier result:\n\n| Check | Value | Tolerance |\n|---|---|---|\n| Distance from slot centre | 0.99 mm | 3 mm |\n| Tilt | 0.0 deg | 5 deg |\n| Height error | -0.01 mm | 1 mm |\n| Speed | 0 mm/s | 5 mm/s |\n| Held by gripper | no | must be released |\n\nWhat I did:\n- **Grasped top-down** at the cube's reported position. The move read-back showed a small random offset, but the cube centre was within the grasp window along the jaw axis, so the close succeeded on the first try.\n- **Aligned the yaw** over the slot. Shoulder pan and wrist roll both change the cube's yaw, so I measured the cube's yaw after the carry move and set the wrist roll to bring it within one degree of the pocket's axes.\n- **Released inside the funnel** with the cube bottom just below the funnel top and the centre within about 2 mm of the slot centre. The cube slid down and seated flat at the pocket floor.\n\nThe arm is parked above the slot with the gripper open. I left it there rather than homing, since the task said to stop once the verifier passed.",
+  "session_id": "35b8a247-5d80-4f9e-9fe9-97c2e6a93de7",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 354,
+    "outputTokens": 4745,
+    "cacheReadInputTokens": 170118,
+    "cacheCreationInputTokens": 18295,
+    "webSearchRequests": 0,
+    "costUSD": 0.6492195000000001,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 2891,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

@@ -1,0 +1,40 @@
+{
+ "attempt": 23,
+ "seed": 23,
+ "run_tag": "zero-shot-v2nh-20261015-233831-23",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise-heldout",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792088236.833028,
+ "wall_s": 75.0,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 17,
+  "duration_ms": 73224,
+  "duration_api_ms": 70071,
+  "total_cost_usd": 0.6587185,
+  "is_error": false,
+  "result": "The verifier passed, so the task is done and I'm stopping here. The arm is parked above the slot with the gripper open.\n\nSummary of what happened:\n\n- **Grasp:** Opened the gripper, moved top-down over the cube on the bed, set the wrist roll to match the cube's yaw, descended, and closed. The simulator reported a successful grasp.\n- **Transfer:** Lifted the cube and carried it over the tray, rolling the wrist so the cube's yaw matched the pocket's zero-yaw walls.\n- **Place:** Lowered the cube to just above the funnel mouth and released it. It slid down and seated flat.\n\nVerifier result:\n\n| Check | Value | Tolerance |\n|---|---|---|\n| Distance from slot centre | 0.62 mm | 3 mm |\n| Tilt | 0.0 deg | 5 deg |\n| Height error | -0.01 mm | 1 mm |\n| Held by gripper | no | must be released |",
+  "session_id": "60ff00cf-5ddd-4894-a89f-0f1d01bb7a0e",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 386,
+    "outputTokens": 4600,
+    "cacheReadInputTokens": 192714,
+    "cacheCreationInputTokens": 18834,
+    "webSearchRequests": 0,
+    "costUSD": 0.6587185,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 2775,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

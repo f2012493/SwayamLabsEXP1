@@ -1,0 +1,40 @@
+{
+ "attempt": 27,
+ "seed": 27,
+ "run_tag": "zero-shot-v2nh-20261015-233831-27",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise-heldout",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792088639.992115,
+ "wall_s": 118.2,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 19,
+  "duration_ms": 116467,
+  "duration_api_ms": 112999,
+  "total_cost_usd": 0.705697,
+  "is_error": false,
+  "result": "The verifier passes. The cube is seated in the tray slot and the arm is stopped above it with the jaws open.\n\nVerifier result:\n\n| Check | Value | Tolerance |\n|---|---|---|\n| Distance from slot centre | 0.74 mm | 3 mm |\n| Tilt | 0.0 deg | 5 deg |\n| Height error | -0.01 mm | 1 mm |\n| Speed | 0 mm/s | 5 mm/s |\n| Held by gripper | no | must be released |\n\nWhat I did:\n\n- **Grasp:** Hovered top-down over the cube, set the wrist roll so the jaws were parallel to the cube faces, descended to a TCP height of 12 mm and closed. The sim reported a clean grasp.\n- **Transfer:** Lifted to 70 mm and swung to the slot. The pan change rotated the cube, so I read the cube yaw from the scene and corrected the wrist roll until it was within 0.2 deg of the pocket.\n- **Place:** Lowered until the cube bottom was about 10 mm above the funnel top, read back the position (1.5 mm off centre), and released. The funnel seated the cube.\n\nThe arm is still parked over the tray at 30 mm. I did not return it to home, since the task said to stop once the verifier passed.",
+  "session_id": "60bd133d-46ba-448f-ace7-32f156e55c85",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 450,
+    "outputTokens": 4777,
+    "cacheReadInputTokens": 232988,
+    "cacheCreationInputTokens": 20205,
+    "webSearchRequests": 0,
+    "costUSD": 0.705697,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 2524,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

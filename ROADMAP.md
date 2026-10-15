@@ -56,8 +56,15 @@ and G-code pause (e.g. Prusa MK4S).
       `studies/out/pre_release_tilt_signal.md`): v2-noise on seeds 10-19 scored 9/10
       (Wilson 60-98%), $10.52. Rule fired on the one non-seating release and on 0 of 9 seated
       ones (false-alarm 0%, 95% interval 0-30%); hit rate unmeasured by the pre-registered
-      rule (fewer than 2 non-seating releases). Next, pre-registered: seeds 20-29 under the
-      same file before any hit rate is claimed.
+      rule (fewer than 2 non-seating releases).
+- [x] Second pre-registered held-out batch, seeds 20-29 (`zero-shot-v2nh-20261015-233831`, $9.17):
+      9/10 passes (Wilson 60-98%), one non-seating release (seed 21, flat on the rim 2.2 mm off,
+      0.13 mm above the pocket top) that the rule did not catch, 0 of 9 seated releases fired.
+      Pooled held out: 18/20 passes, hits 1/2 (50%, 95% interval 9-91%), false alarms 0/18
+      (0-18%). By the prediction file's rule 2 the signal did not generalise; both misses to
+      date are flat-on-the-rim releases. Audited. Any further rule needs its own prediction file
+      and a harder condition that produces more non-seating releases. Still open: the v2-noise
+      sim-reference decision above.
 - [ ] Buy the day-one items in `SHOPPING.md`; order the printer and cameras.
 - [ ] Day the arm arrives: **film the build** (`baseline/BUILD_FILMING.md`). This is
       Phase 0 step 5 and cannot be redone later.

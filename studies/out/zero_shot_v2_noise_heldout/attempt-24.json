@@ -1,0 +1,40 @@
+{
+ "attempt": 24,
+ "seed": 24,
+ "run_tag": "zero-shot-v2nh-20261015-233831-24",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise-heldout",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792088311.878839,
+ "wall_s": 153.3,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 21,
+  "duration_ms": 151363,
+  "duration_api_ms": 148292,
+  "total_cost_usd": 1.1398982500000001,
+  "is_error": false,
+  "result": "The verifier passes. The cube is seated in the tray slot and the arm is stopped, with the gripper open just above the tray.\n\nVerifier result:\n\n| Check | Value | Tolerance |\n|---|---|---|\n| Distance from slot centre | 0.82 mm | 3 mm |\n| Tilt | 0.0\u00b0 | 5\u00b0 |\n| Height error | -0.01 mm | 1 mm |\n| Speed | 0 mm/s | 5 mm/s |\n| Held by gripper | no | must be released |\n\nWhat I did:\n\n- **Grasped top-down** at the cube on the bed with the fingers pointing straight down, reading back the reached pose to confirm the random placement error was under 1 mm before closing.\n- **Carried to the slot** at a safe height, then checked the held pose. The first reading showed the cube tilted and yawed, but that was a transient while the arm settled. A second reading showed it flat.\n- **Aligned the yaw** with wrist roll so the cube's faces matched the pocket walls, then lowered to just above the funnel and released. The cube slid in and seated.\n\nOne thing to note: the safety hook limits pitch to the range of -90 to 90 degrees, so a pitch beyond straight-down is refused. That was not needed in the end.",
+  "session_id": "5cf8fb57-de4d-46fd-85ab-064756f9ba8d",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 514,
+    "outputTokens": 10329,
+    "cacheReadInputTokens": 313713,
+    "cacheCreationInputTokens": 26994,
+    "webSearchRequests": 0,
+    "costUSD": 1.1398982500000001,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 7533,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

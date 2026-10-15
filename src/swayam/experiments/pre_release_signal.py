@@ -167,6 +167,25 @@ def _hit_cell(s: dict) -> str:
     return f"**{_fmt(s['hit_rate'])}**"
 
 
+def _verdict(s: dict) -> str:
+    """The prediction file's decision rule, items 1-4, applied as written to the held-out score."""
+    ns, hits, fa = s["not_seated"], s["hits"], s["false_alarms"]
+    if ns < 2:
+        return (f"**Verdict (rule 4):** {ns} non-seating held-out release{'s' if ns != 1 else ''}; the hit rate is "
+                f"unmeasured. False-alarm rate {_fmt(s['false_alarm_rate'])} is the only measured side.")
+    hit_ok = hits / ns >= 0.6
+    if hit_ok and fa <= 1:
+        return (f"**Verdict (rule 1): holds.** Hit rate {_fmt(s['hit_rate'])} on {ns} non-seating held-out releases "
+                f"with {fa} false alarm{'s' if fa != 1 else ''} in {s['seated']} seated ones.")
+    parts = []
+    if not hit_ok:
+        parts.append(f"rule 2: hit rate {hits}/{ns} = {_fmt(s['hit_rate'])} is below 60 %, so the tilt/height signal "
+                     f"did not generalise to held-out releases")
+    if fa >= 2:
+        parts.append(f"rule 3: {fa} false alarms in {s['seated']} seated releases")
+    return "**Verdict (" + "; ".join(parts) + f").** False-alarm rate {_fmt(s['false_alarm_rate'])}."
+
+
 def _fmt(w):
     p, lo, hi = w
     return "n/a" if math.isnan(p) else f"{p:.0%} [{lo:.0%}, {hi:.0%}]"
@@ -185,7 +204,7 @@ def write_report(rows: list[dict]) -> Path:
         f"Rule: do not release while the held part is tilted > {PRE_RELEASE_TILT_DEG:g} deg, or while its "
         f"underside (centre z - {CUBE_SIZE_MM / 2:g} mm) is at or below the pocket top (slot centre z) with "
         f"> {PRE_RELEASE_XY_MM:g} mm of xy error. Fitted on the seeds 0-9 runs of 2026-10-15; held-out data "
-        f"= `{HELDOUT_FAMILY}` run tags (seeds 10-19, task v2 with 2 mm RMS placement noise, tilt- and "
+        f"= `{HELDOUT_FAMILY}` run tags (seeds 10-29 in two pre-registered batches of 10, task v2 with 2 mm RMS placement noise, tilt- and "
         f"height-aware verifier): {', '.join(stamps) or 'none'}.",
         "",
         "Every number below is recomputed from `runs/*.jsonl` by `swayam.experiments.pre_release_signal`. "
@@ -193,7 +212,7 @@ def write_report(rows: list[dict]) -> Path:
         "verifier rule on the scene logged with the releasing tool call. Hit = fired and not seated; false "
         "alarm = fired and seated.",
         "",
-        "| Quantity | Fitted data (seeds 0-9, v1 + v2 + v2-noise) | **Held out (v2-noise, seeds 10-19)** |",
+        "| Quantity | Fitted data (seeds 0-9, v1 + v2 + v2-noise) | **Held out (v2-noise, seeds 10-29, pooled)** |",
         "|---|---|---|",
         f"| Attempts (verifier passes) | {st['attempts']} ({st['attempt_passes']}) | {sh['attempts']} ({sh['attempt_passes']}) |",
         f"| Releases scored (unscorable) | {st['releases'] - st['unscorable']} ({st['unscorable']}) | {sh['releases'] - sh['unscorable']} ({sh['unscorable']}) |",
@@ -203,6 +222,8 @@ def write_report(rows: list[dict]) -> Path:
         f"| Releases that seated | {st['seated']} | {sh['seated']} |",
         f"| False alarms / correct rejections | {st['false_alarms']} / {st['correct_rejections']} | **{sh['false_alarms']} / {sh['correct_rejections']}** |",
         f"| False-alarm rate, Wilson 95% | {_fmt(st['false_alarm_rate'])} | **{_fmt(sh['false_alarm_rate'])}** |",
+        "",
+        _verdict(sh),
         "",
         "## Held-out releases",
         "",
