@@ -24,11 +24,16 @@ and G-code pause (e.g. Prusa MK4S).
 - [x] Repeatability prediction pre-registered:
       `predictions/2026-10-15-arm-repeatability.md`.
 - [x] CI: tests run on every push to GitHub.
+- [x] Real-arm backend checked line by line against LeRobot 0.6.1 source (import path,
+      degree convention, raw registers, no interactive calibration inside MCP).
+- [x] Repeatability protocol scripted (`swayam.experiments.repeatability`), rehearsed in sim.
+- [x] First-72-hours runbook: `docs/DAY_ONE.md`.
+- [x] Backlash evidence recorded: `predictions/2026-10-15-arm-repeatability-addendum.md`.
 - [ ] Buy the day-one items in `SHOPPING.md`; order the printer and cameras.
 - [ ] Day the arm arrives: **film the build** (`baseline/BUILD_FILMING.md`). This is
       Phase 0 step 5 and cannot be redone later.
-- [ ] Bring up the real backend: verify every item listed at the top of
-      `src/swayam/arm/real.py`, then re-check `config/limits.json` on the real arm.
+- [ ] Day 1 (17th): build and film. Day 2: calibrate, bring up, sign/zero check.
+      Day 3: run the repeatability protocol. All in `docs/DAY_ONE.md`.
 
 ## Phase 0 — Instrument; build what needs no assembly (target: 2026-11-15)
 

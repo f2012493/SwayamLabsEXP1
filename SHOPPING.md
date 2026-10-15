@@ -11,6 +11,8 @@ is a brand endorsement beyond the reasons given.
 | Rigid table + 2 C-clamps | Arm base must not move, or every calibration is wrong | Clamp the base, don't rely on rubber feet |
 | Inline power switch or e-stop button on the servo power supply | A physical cut-off that works even if software hangs | Mount it where you can hit it without looking |
 | Digital calipers, 0.01 mm | Bought instrument: checks printed parts; never printed | One with a USB/data output lets Claude read it directly |
+| **Dial indicator 0.01 mm + magnetic base** | The Day-3 repeatability measurement (`docs/DAY_ONE.md`) cannot happen without it | Needs a steel or magnetic surface to clamp to: a small steel plate under the arm works |
+| 200 g test weight (or calibrated coins) | Loaded-vs-unloaded backlash check | |
 
 Check whether your SO-101 kit includes a **leader arm** (for teleoperation), the
 **servo driver board**, and **power supplies**. If no leader arm, add one later —
@@ -32,7 +34,6 @@ it is only needed for recording demonstrations (Phase 1 learned policies).
 
 | Item | Why |
 |---|---|
-| Dial indicator 0.01 mm + magnetic base | Repeatability and backlash, independent of the arm's own encoders |
 | Gauge pin set (around 5–7 mm in 0.01–0.05 mm steps) | Checks printed holes without trusting the printer |
 | Scale, 0.01 g | Part mass as a print-quality check |
 | Small handheld force gauge (or a luggage scale to start) | Independent check of torque-at-slip and snap force |

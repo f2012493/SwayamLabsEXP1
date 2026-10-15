@@ -1,7 +1,7 @@
 """MCP server that lets Claude Code drive the SO-101 (simulated or real) safely.
 
-Every command is checked against config/limits.json (joint ranges, step size, speed,
-duration, predicted gripper height and reach) before it runs, and logged to runs/.
+Every command goes through swayam.controller.Controller, which checks it against
+config/limits.json and logs it to runs/.
 Backend: SWAYAM_BACKEND=sim (default) or real (also needs SWAYAM_PORT).
 """
 
@@ -9,68 +9,29 @@ from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
 
-from swayam import GRIPPER, JOINTS
-from swayam.arm import make_arm
-from swayam.kinematics import Kinematics
-from swayam.limits import check_gripper_pose, check_move, load_limits
-from swayam.motion import approach_waypoints
-from swayam.runlog import log_event
+from swayam.controller import Controller
 
 mcp = FastMCP("swayam-arm")
 _state: dict = {}
 
 
-def _arm():
-    if "arm" not in _state:
-        _state["limits"] = load_limits()
-        _state["arm"] = make_arm()
-        _state["kin"] = Kinematics()
-    return _state["arm"]
-
-
-def _guarded_move(
-    targets: dict[str, float], duration_s: float, tool: str, same_direction: bool = False
-) -> dict:
-    arm = _arm()
-    limits = _state["limits"]
-    current = arm.positions()
-    waypoints = approach_waypoints(current, targets, limits) if same_direction else [targets]
-    # The final approach is short; give it the minimum safe duration.
-    durations = [duration_s] + [max(limits["min_duration_s"], 0.5)] * (len(waypoints) - 1)
-
-    problems: list[str] = []
-    here = current
-    for wp, dur in zip(waypoints, durations):
-        problems += check_move(wp, dur, here, limits)
-        here = {**here, **wp}
-        problems += check_gripper_pose(_state["kin"].gripper_xyz(here), limits)
-    if problems:
-        log_event("refused", tool=tool, targets=targets, duration_s=duration_s, problems=problems)
-        return {"ok": False, "refused": problems}
-
-    for wp, dur in zip(waypoints, durations):
-        result = arm.move(wp, dur)
-        if result.get("aborted"):
-            break
-    log_event(
-        "move", tool=tool, targets=targets, duration_s=duration_s,
-        waypoints=waypoints, result=result,
-    )
-    return {"ok": result.get("aborted") is None, "waypoints": len(waypoints), **result}
+def _ctl() -> Controller:
+    if "ctl" not in _state:
+        _state["ctl"] = Controller()
+    return _state["ctl"]
 
 
 @mcp.tool()
 def get_telemetry() -> dict:
     """Current joint angles (deg), gripper (% open), and sensed load / current /
     temperature / voltage where the backend supports it."""
-    return _arm().telemetry()
+    return _ctl().telemetry()
 
 
 @mcp.tool()
 def get_limits() -> dict:
     """The safety limits every command is checked against."""
-    _arm()
-    return _state["limits"]
+    return _ctl().limits
 
 
 @mcp.tool()
@@ -84,29 +45,32 @@ def move_joints(
     same_direction (default on) finishes every joint from its configured side to
     cancel gear backlash; turn it off only for experiments that need it off.
     """
-    return _guarded_move(targets, duration_s, "move_joints", same_direction)
+    return _ctl().move(targets, duration_s, same_direction, tool="move_joints")
+
+
+@mcp.tool()
+def travel_to(targets: dict[str, float], deg_per_s: float = 30.0) -> dict:
+    """Move any distance to target joint angles (deg), automatically split into legs
+    that each respect the step limit. Use this for big moves; move_joints for small ones."""
+    return _ctl().travel(targets, deg_per_s, tool="travel_to")
 
 
 @mcp.tool()
 def set_gripper(percent_open: float, duration_s: float = 0.5) -> dict:
     """Open (100) or close (0) the gripper. Watch load/current to detect a grasp."""
-    return _guarded_move({GRIPPER: percent_open}, duration_s, "set_gripper")
+    return _ctl().gripper(percent_open, duration_s)
 
 
 @mcp.tool()
 def home(duration_s: float = 3.0) -> dict:
     """Return to the home pose defined in config/limits.json."""
-    _arm()
-    home_pose = {n: v for n, v in _state["limits"]["home"].items() if n in (*JOINTS, GRIPPER)}
-    return _guarded_move(home_pose, duration_s, "home")
+    return _ctl().home(duration_s)
 
 
 @mcp.tool()
 def stop() -> dict:
     """Hold position immediately."""
-    _arm().stop()
-    log_event("stop")
-    return {"ok": True}
+    return _ctl().stop()
 
 
 def main() -> None:

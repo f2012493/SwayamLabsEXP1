@@ -33,9 +33,12 @@ def make_arm(backend: str | None = None) -> Arm:
         from swayam.arm.real import RealArm
         from swayam.limits import load_limits
 
+        limits = load_limits()
         return RealArm(
             port=os.environ["SWAYAM_PORT"],
             robot_id=os.environ.get("SWAYAM_ROBOT_ID", "swayam_follower"),
-            max_current_ma=load_limits()["max_current_ma"],
+            max_current_ma=limits["max_current_ma"],
+            current_ma_per_count=limits["current_ma_per_count_unverified"],
+            max_relative_target_deg=limits["max_step_deg"],
         )
     raise ValueError(f"unknown SWAYAM_BACKEND '{backend}' (use 'sim' or 'real')")

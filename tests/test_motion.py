@@ -23,6 +23,16 @@ def test_overshoot_never_leaves_joint_range():
     assert wps[0]["wrist_flex"] >= lo
 
 
+def test_travel_splits_long_moves_and_arrives():
+    from swayam.controller import Controller
+    ctl = Controller("sim")
+    r = ctl.travel({"wrist_roll": 130, "shoulder_pan": -58})
+    assert r["ok"], r
+    pos = ctl.positions()
+    assert abs(pos["wrist_roll"] - 130) < 1.5 and abs(pos["shoulder_pan"] + 58) < 1.5
+    assert ctl.home()["ok"]
+
+
 def test_server_uses_same_direction_by_default_in_sim():
     r = mcp_server.move_joints({"shoulder_pan": -15}, 1.0)
     assert r["ok"] and r["waypoints"] == 2

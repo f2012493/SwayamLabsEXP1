@@ -13,7 +13,7 @@ Machines making machines, starting from one SO-101 arm and Claude Code.
 |---|---|---|
 | Arm control server for Claude (MCP) | `src/swayam/mcp_server.py` | Works on the simulated SO-101 |
 | Simulated SO-101 (official model, Apache-2.0) | `sim/so101/` | From TheRobotStudio/SO-ARM100 |
-| Real-arm backend via LeRobot | `src/swayam/arm/real.py` | Written, **untested** until the arm arrives |
+| Real-arm backend via LeRobot 0.6.1 | `src/swayam/arm/real.py` | Checked against source; **untested on hardware** |
 | Safety limits | `config/limits.json` | Checked by the server **and** an independent hook |
 | Independent safety hook | `.claude/hooks/check_arm_command.py` | Blocks out-of-range commands before they reach the server |
 | Clearance-matrix coupon (first experiment) | `cad/coupon.py` | Generates `cad/out/*.stl` |
@@ -21,6 +21,8 @@ Machines making machines, starting from one SO-101 arm and Claude Code.
 | Arm error-budget study | `src/swayam/studies/error_budget.py` | Predicts repeatability and placement error |
 | Pre-registered predictions | `predictions/` | Judged by the real arm in Phase 0 |
 | CI (tests on every push) | `.github/workflows/tests.yml` | GitHub Actions |
+| Repeatability experiment (sim rehearsal / real measurement) | `src/swayam/experiments/repeatability.py` | Rehearsed in sim |
+| First-72-hours runbook | `docs/DAY_ONE.md` | For 2026-10-17 |
 
 ## Setup
 

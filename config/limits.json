@@ -26,5 +26,6 @@
   "max_duration_s": 10,
   "min_gripper_height_m": 0.01,
   "max_reach_m": 0.45,
-  "max_current_ma": 800
+  "max_current_ma": 800,
+  "current_ma_per_count_unverified": 6.5
 }
