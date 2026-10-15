@@ -1,0 +1,40 @@
+{
+ "attempt": 10,
+ "seed": 10,
+ "run_tag": "zero-shot-v2nh-20261015-225943-10",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise-heldout",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792085383.1829271,
+ "wall_s": 115.7,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 23,
+  "duration_ms": 113506,
+  "duration_api_ms": 110045,
+  "total_cost_usd": 1.0162119999999997,
+  "is_error": false,
+  "result": "The verifier passes. The cube is seated in the tray slot and I stopped the arm where it is, with the gripper open above the tray.\n\n| Check | Result | Tolerance |\n|---|---|---|\n| Distance from slot centre | 0.65 mm | 3 mm |\n| Tilt | 0.0 deg | 5 deg |\n| Height error | 0.01 mm | 1 mm |\n| Speed | 0 mm/s | 5 mm/s |\n| Held by gripper | no | must be released |\n\nHow it went:\n\n- **Grasp:** The first close attempt at a 25 mm tool height failed because the cube sat 15 mm along the fingers, outside the pad span. Lowering the tool to 12 mm put the cube between the pads and the second close grasped it.\n- **Placement noise:** The 2 mm random placement error pushed one approach just past the 2 mm jaw-axis tolerance, so I re-commanded the same target and read back the reached pose before closing.\n- **Orientation:** I matched the jaw axis to the cube's 13 degree yaw for the pick, then rolled the wrist over the slot until the cube read 0.2 degrees of yaw before releasing it from just above the funnel top.",
+  "session_id": "2adfde8b-da67-4627-948a-658c1d8989e6",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 546,
+    "outputTokens": 7035,
+    "cacheReadInputTokens": 322568,
+    "cacheCreationInputTokens": 28918,
+    "webSearchRequests": 0,
+    "costUSD": 1.0162119999999997,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 4441,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

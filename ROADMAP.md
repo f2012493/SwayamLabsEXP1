@@ -49,6 +49,15 @@ and G-code pause (e.g. Prusa MK4S).
       the tilt rule refused every re-grasp. Proposed, not pre-registered (needs a decision):
       v2-noise is the sim reference for the hardware rerun and the sim is not hardened further
       before the arm arrives.
+- [x] Verifier tightened (5253316, a tightening, no approval needed): `is_cube_in_slot` now also
+      needs tilt <= 5 deg and height within 1 mm of the slot centre; flips none of the 1570
+      logged scenes to date. Still no yaw or pocket-geometry term (audit).
+- [x] Pre-release abort signal tested held out (`predictions/2026-10-15-pre-release-tilt-signal.md`,
+      `studies/out/pre_release_tilt_signal.md`): v2-noise on seeds 10-19 scored 9/10
+      (Wilson 60-98%), $10.52. Rule fired on the one non-seating release and on 0 of 9 seated
+      ones (false-alarm 0%, 95% interval 0-30%); hit rate unmeasured by the pre-registered
+      rule (fewer than 2 non-seating releases). Next, pre-registered: seeds 20-29 under the
+      same file before any hit rate is claimed.
 - [ ] Buy the day-one items in `SHOPPING.md`; order the printer and cameras.
 - [ ] Day the arm arrives: **film the build** (`baseline/BUILD_FILMING.md`). This is
       Phase 0 step 5 and cannot be redone later.

@@ -1,0 +1,1 @@
+{"stamp": "20261015-225943", "args": {"condition": "v2-noise-heldout", "attempts": 10, "start": 10, "model": "claude-fable-5-1", "max_turns": 60, "timeout": 900.0, "budget_usd": 10.0, "work": null, "report": null, "report_v2": false}, "instruction": "Move the cube from the bed into the tray slot and stop when the verifier passes."}

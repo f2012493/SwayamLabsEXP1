@@ -1,0 +1,40 @@
+{
+ "attempt": 17,
+ "seed": 17,
+ "run_tag": "zero-shot-v2nh-20261015-225943-17",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise-heldout",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792086459.618173,
+ "wall_s": 88.8,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 20,
+  "duration_ms": 87173,
+  "duration_api_ms": 84663,
+  "total_cost_usd": 0.7838247500000001,
+  "is_error": false,
+  "result": "The verifier passes. The cube is seated in the tray slot and the arm is stopped above it with the gripper open.\n\nHow it went:\n\n- **Grasp.** Opened the gripper, rotated the wrist so the jaws matched the cube's yaw, and descended to the cube centre height. The server's random placement noise put the first two descents about 4 to 5 mm off, so I re-targeted until the read-back pose was within the 2 mm jaw tolerance, then closed. The grasp event reported \"grasped\".\n- **Transfer.** Lifted to 60 mm, carried the cube over the slot, and set the wrist roll so the cube's yaw came back to near zero to match the pocket.\n- **Release.** Lowered until the cube bottom sat just at the funnel top, confirmed it was flat and within about 2 mm of the slot centre, and opened the gripper. The cube slid down and seated.\n\nVerifier result:\n\n| Check | Value | Tolerance |\n|---|---|---|\n| Distance from slot centre | 0.82 mm | 3 mm |\n| Tilt | 0.0 deg | 5 deg |\n| Height error | -0.01 mm | 1 mm |\n| Speed | 0 mm/s | 5 mm/s |\n| Held by gripper | no | must be released |\n\nI stopped as asked once the verifier returned true. The arm was not sent home.",
+  "session_id": "d6b959bf-3def-4b57-a102-26fec2968642",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 482,
+    "outputTokens": 5568,
+    "cacheReadInputTokens": 261859,
+    "cacheCreationInputTokens": 21757,
+    "webSearchRequests": 0,
+    "costUSD": 0.7838247500000001,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 3255,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

@@ -1,0 +1,40 @@
+{
+ "attempt": 19,
+ "seed": 19,
+ "run_tag": "zero-shot-v2nh-20261015-225943-19",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise-heldout",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792086622.683271,
+ "wall_s": 96.2,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 22,
+  "duration_ms": 94410,
+  "duration_api_ms": 91047,
+  "total_cost_usd": 0.85007275,
+  "is_error": false,
+  "result": "The verifier passes. The cube is seated in the tray slot.\n\n**What happened**\n- First grasp attempt failed because the cube centre sat 8 mm along the fingers, past the pad reach of 6.3 mm. Lowering the TCP by 3.5 mm fixed it.\n- The cube was grasped with the jaws aligned to its -9\u00b0 yaw, then rotated to 0\u00b0 above the slot by reading back the jaw axis and adjusting the wrist roll.\n- Released about 10 mm above the funnel top, and the funnel seated it flat.\n\n**Verifier result**\n\n| Check | Value | Tolerance |\n|---|---|---|\n| Distance from slot centre | 0.88 mm | 3 mm |\n| Tilt | 0.0\u00b0 | 5\u00b0 |\n| Height error | -0.01 mm | 1 mm |\n| Held by gripper | no | must be released |\n\nThe arm is parked open above the slot. It was not returned home since the task only asked to stop once the verifier passed.",
+  "session_id": "d671682d-9d10-41c2-b4ed-0d6690ccf71b",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 514,
+    "outputTokens": 5990,
+    "cacheReadInputTokens": 290851,
+    "cacheCreationInputTokens": 23636,
+    "webSearchRequests": 0,
+    "costUSD": 0.85007275,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 3320,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

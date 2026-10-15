@@ -1,0 +1,40 @@
+{
+ "attempt": 12,
+ "seed": 12,
+ "run_tag": "zero-shot-v2nh-20261015-225943-12",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise-heldout",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792085602.4452329,
+ "wall_s": 93.2,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 20,
+  "duration_ms": 91423,
+  "duration_api_ms": 88390,
+  "total_cost_usd": 0.7755497499999999,
+  "is_error": false,
+  "result": "The verifier passes. The cube is seated in the tray slot, flat and released.\n\n| Check | Result | Tolerance |\n|---|---|---|\n| Distance from slot centre | 0.66 mm | 3 mm |\n| Tilt | 0.0 deg | 5 deg |\n| Height error | -0.01 mm | 1 mm |\n| Speed | 0 mm/s | 5 mm/s |\n\n**What I did:** opened the gripper, rolled the wrist to match the cube's 12 deg yaw, and grasped it top-down. The first two descents landed about 3 mm short along the jaw axis because of the placement noise, so I offset the third target by the measured error and got within 1.2 mm before closing. I then carried the cube over the slot, rolled the wrist so the cube faces were parallel to the pocket walls, lowered it until its bottom was just above the funnel top, and released it. It slid in and seated.\n\nThe arm is parked above the slot with the gripper open. No further action is needed.",
+  "session_id": "0ea8ce8d-2da2-4b63-b524-6b5e70e26fff",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 482,
+    "outputTokens": 5411,
+    "cacheReadInputTokens": 259839,
+    "cacheCreationInputTokens": 21761,
+    "webSearchRequests": 0,
+    "costUSD": 0.7755497499999999,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 3182,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

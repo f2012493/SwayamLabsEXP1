@@ -91,8 +91,15 @@ def _scene_of(row: dict) -> dict | None:
     return None
 
 
+def _tags(rows: list[dict], families: tuple[str, ...]) -> list[str]:
+    """Run tags whose family prefix (everything before the per-attempt -NN, or the whole
+    tag family such as zero-shot-v2nh) is one of `families`."""
+    return sorted({r["run_tag"] for r in rows
+                   if r.get("run_tag") and any(r["run_tag"].startswith(f + "-") for f in families)})
+
+
 def releases(rows: list[dict], families: tuple[str, ...]) -> list[dict]:
-    tags = sorted({r["run_tag"] for r in rows if r.get("run_tag", "").rsplit("-", 1)[0] in families})
+    tags = _tags(rows, families)
     out = []
     for tag in tags:
         rs = [r for r in rows if r.get("run_tag") == tag]
@@ -131,7 +138,7 @@ def score(rel: list[dict]) -> dict:
 
 def check_flips(rows: list[dict], families: tuple[str, ...]) -> dict:
     """Old (distance/speed/held) vs new verifier on every logged state and every final state."""
-    tags = sorted({r["run_tag"] for r in rows if r.get("run_tag", "").rsplit("-", 1)[0] in families})
+    tags = _tags(rows, families)
     states = flips = 0
     finals = []
     for tag in tags:
@@ -150,6 +157,14 @@ def check_flips(rows: list[dict], families: tuple[str, ...]) -> dict:
             "pass_tilt_max_deg": max((f["tilt_deg"] for f in passes), default=None),
             "pass_height_error_max_mm": max((abs(f["height_error_mm"]) for f in passes), default=None),
             "finals": finals}
+
+
+def _hit_cell(s: dict) -> str:
+    """The prediction file's rule 4: under 2 non-seating releases, the hit rate is unmeasured."""
+    if s["not_seated"] < 2:
+        return (f"unmeasured (rule 4: {s['not_seated']} non-seating release" + ("s" if s["not_seated"] != 1 else "")
+                + f"; {s['hits']}/{s['not_seated']} fired, interval {_fmt(s['hit_rate'])} is not a measurement)")
+    return f"**{_fmt(s['hit_rate'])}**"
 
 
 def _fmt(w):
@@ -184,7 +199,7 @@ def write_report(rows: list[dict]) -> Path:
         f"| Releases scored (unscorable) | {st['releases'] - st['unscorable']} ({st['unscorable']}) | {sh['releases'] - sh['unscorable']} ({sh['unscorable']}) |",
         f"| Releases that did not seat | {st['not_seated']} | {sh['not_seated']} |",
         f"| Hits / misses | {st['hits']} / {st['misses']} | **{sh['hits']} / {sh['misses']}** |",
-        f"| Hit rate, Wilson 95% | {_fmt(st['hit_rate'])} | **{_fmt(sh['hit_rate'])}** |",
+        f"| Hit rate, Wilson 95% | {_fmt(st['hit_rate'])} | {_hit_cell(sh)} |",
         f"| Releases that seated | {st['seated']} | {sh['seated']} |",
         f"| False alarms / correct rejections | {st['false_alarms']} / {st['correct_rejections']} | **{sh['false_alarms']} / {sh['correct_rejections']}** |",
         f"| False-alarm rate, Wilson 95% | {_fmt(st['false_alarm_rate'])} | **{_fmt(sh['false_alarm_rate'])}** |",
