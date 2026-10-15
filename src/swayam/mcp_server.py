@@ -13,6 +13,7 @@ from swayam import GRIPPER, JOINTS
 from swayam.arm import make_arm
 from swayam.kinematics import Kinematics
 from swayam.limits import check_gripper_pose, check_move, load_limits
+from swayam.motion import approach_waypoints
 from swayam.runlog import log_event
 
 mcp = FastMCP("swayam-arm")
@@ -27,20 +28,35 @@ def _arm():
     return _state["arm"]
 
 
-def _guarded_move(targets: dict[str, float], duration_s: float, tool: str) -> dict:
+def _guarded_move(
+    targets: dict[str, float], duration_s: float, tool: str, same_direction: bool = False
+) -> dict:
     arm = _arm()
     limits = _state["limits"]
     current = arm.positions()
-    problems = check_move(targets, duration_s, current, limits)
-    if not problems:
-        goal = {**current, **targets}
-        problems = check_gripper_pose(_state["kin"].gripper_xyz(goal), limits)
+    waypoints = approach_waypoints(current, targets, limits) if same_direction else [targets]
+    # The final approach is short; give it the minimum safe duration.
+    durations = [duration_s] + [max(limits["min_duration_s"], 0.5)] * (len(waypoints) - 1)
+
+    problems: list[str] = []
+    here = current
+    for wp, dur in zip(waypoints, durations):
+        problems += check_move(wp, dur, here, limits)
+        here = {**here, **wp}
+        problems += check_gripper_pose(_state["kin"].gripper_xyz(here), limits)
     if problems:
         log_event("refused", tool=tool, targets=targets, duration_s=duration_s, problems=problems)
         return {"ok": False, "refused": problems}
-    result = arm.move(targets, duration_s)
-    log_event("move", tool=tool, targets=targets, duration_s=duration_s, result=result)
-    return {"ok": result.get("aborted") is None, **result}
+
+    for wp, dur in zip(waypoints, durations):
+        result = arm.move(wp, dur)
+        if result.get("aborted"):
+            break
+    log_event(
+        "move", tool=tool, targets=targets, duration_s=duration_s,
+        waypoints=waypoints, result=result,
+    )
+    return {"ok": result.get("aborted") is None, "waypoints": len(waypoints), **result}
 
 
 @mcp.tool()
@@ -58,13 +74,17 @@ def get_limits() -> dict:
 
 
 @mcp.tool()
-def move_joints(targets: dict[str, float], duration_s: float = 1.0) -> dict:
+def move_joints(
+    targets: dict[str, float], duration_s: float = 1.0, same_direction: bool = True
+) -> dict:
     """Move some or all joints to target angles in degrees over duration_s seconds.
 
     Joint names: shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll.
     Joints left out hold position. Refused moves return {"ok": false, "refused": [...]}.
+    same_direction (default on) finishes every joint from its configured side to
+    cancel gear backlash; turn it off only for experiments that need it off.
     """
-    return _guarded_move(targets, duration_s, "move_joints")
+    return _guarded_move(targets, duration_s, "move_joints", same_direction)
 
 
 @mcp.tool()

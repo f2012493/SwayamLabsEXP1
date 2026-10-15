@@ -7,17 +7,22 @@ raw files, so never edit or delete lines.
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 
 from swayam import REPO_ROOT
 
-RUNS_DIR = REPO_ROOT / "runs"
+
+def runs_dir() -> Path:
+    """runs/ in the repo, unless SWAYAM_RUNS_DIR points elsewhere (tests do)."""
+    return Path(os.environ.get("SWAYAM_RUNS_DIR", REPO_ROOT / "runs"))
 
 
 def log_event(event: str, **fields) -> None:
-    RUNS_DIR.mkdir(exist_ok=True)
-    path = RUNS_DIR / f"{time.strftime('%Y-%m-%d')}.jsonl"
+    d = runs_dir()
+    d.mkdir(parents=True, exist_ok=True)
+    path = d / f"{time.strftime('%Y-%m-%d')}.jsonl"
     record = {"t": time.time(), "event": event, **fields}
     with path.open("a") as f:
         f.write(json.dumps(record, default=str) + "\n")

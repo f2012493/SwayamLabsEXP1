@@ -16,6 +16,14 @@ and G-code pause (e.g. Prusa MK4S).
 - [x] Independent safety hook on every arm command.
 - [x] Real-arm backend written against LeRobot (untested until arrival).
 - [x] Clearance-matrix coupon CAD (`cad/coupon.py`).
+- [x] Error-budget study (`src/swayam/studies/error_budget.py`). Findings:
+      same-direction approach should improve repeatability about 7x (3.7 -> 0.5 mm);
+      kinematic calibration should improve camera-guided placement about 4x
+      (14 -> 3.5 mm); shoulder and elbow dominate the error.
+- [x] Same-direction approach in the arm server (on by default).
+- [x] Repeatability prediction pre-registered:
+      `predictions/2026-10-15-arm-repeatability.md`.
+- [x] CI: tests run on every push to GitHub.
 - [ ] Buy the day-one items in `SHOPPING.md`; order the printer and cameras.
 - [ ] Day the arm arrives: **film the build** (`baseline/BUILD_FILMING.md`). This is
       Phase 0 step 5 and cannot be redone later.
@@ -30,7 +38,10 @@ New operations: harvest, inspect, mount a part on itself.
    joint/pose moves, grip, AprilTag poses, on-demand image, e-stop. Claude Code hook
    rejecting any out-of-limit command.
 2. Hand-eye calibration (ChArUco). Gauge R&R on the measurement first, then
-   ARM ERROR = mean/max error over 100 returns to 5 poses.
+   ARM ERROR: run the pre-registered protocol in
+   `predictions/2026-10-15-arm-repeatability.md` exactly as written, and record
+   whether the prediction held. Then kinematic calibration (identify each joint's
+   zero offset from ChArUco views) and re-measure placement error.
 3. Clearance-matrix coupon as a designed experiment. Factors: clearance (0.0–0.6 mm),
    orientation on the bed, material. Response: slide / press / snap, with force from
    motor current. Output: a fit table that becomes the CadQuery parameters for every

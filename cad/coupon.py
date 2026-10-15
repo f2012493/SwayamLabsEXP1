@@ -21,7 +21,10 @@ TIP_CHAMFER = 0.8
 CLEARANCES = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]  # diametral, mm
 HOLE_PITCH = 20.0
 PLATE_T = 10.0
-LEAD_IN = 1.5  # chamfer on each hole: must exceed 2x measured arm error once known
+# Inner lead-in sized for same-direction repeatability (error budget: 0.6 mm worst-5%
+# -> >= 1.5 mm). So the arm must approach these holes from taught positions with
+# same_direction=True, and the plate must sit in a locating nest, not loose on the table.
+LEAD_IN = 1.5
 OUT = Path(__file__).parent / "out"
 
 

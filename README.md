@@ -18,6 +18,9 @@ Machines making machines, starting from one SO-101 arm and Claude Code.
 | Independent safety hook | `.claude/hooks/check_arm_command.py` | Blocks out-of-range commands before they reach the server |
 | Clearance-matrix coupon (first experiment) | `cad/coupon.py` | Generates `cad/out/*.stl` |
 | Red-team auditor | `.claude/agents/closure-auditor.md` | Ready |
+| Arm error-budget study | `src/swayam/studies/error_budget.py` | Predicts repeatability and placement error |
+| Pre-registered predictions | `predictions/` | Judged by the real arm in Phase 0 |
+| CI (tests on every push) | `.github/workflows/tests.yml` | GitHub Actions |
 
 ## Setup
 

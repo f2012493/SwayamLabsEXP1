@@ -40,6 +40,14 @@ be true for it to happen, then test the cheapest of those first.
 - **Design for this robot.** One assembly direction; lead-ins that capture at least
   2x the measured ARM ERROR; joins by snap, press, bayonet, or pause-and-embed only.
   No screws, cable routing, glue, or soldering without approval.
+- **Two-stage fits.** Camera-guided placement is several times less precise than
+  returning to a taught pose (error budget: ~3.5 mm vs ~0.5 mm). So every fixture has
+  a wide outer funnel sized to placement error, and the precise fit inside relies on
+  same-direction repeatability. Until Phase 0 measures the real arm, use the
+  error-budget values: outer funnel >= 8 mm, inner lead-in >= 1.5 mm.
+- **Predict, then measure.** Before any experiment on hardware, write the prediction
+  and decision rule in `predictions/` and commit it. Never edit a prediction after the
+  data exists; a failed prediction is a result, not a mistake.
 - **One new operation class per phase**, and every machine built is used by the cell
   afterwards.
 - **Prefer reversible actions.** Name any irreversible action before taking it; log
