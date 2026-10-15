@@ -1,0 +1,40 @@
+{
+ "attempt": 1,
+ "seed": 1,
+ "run_tag": "zero-shot-v2n-20261015-221203-01",
+ "model_requested": "claude-fable-5-1",
+ "condition": "v2-noise",
+ "task_version": 2,
+ "noise_mm": 2.0,
+ "started_at": 1792082927.647028,
+ "wall_s": 122.7,
+ "timed_out": false,
+ "exit_code": 0,
+ "cli": {
+  "num_turns": 22,
+  "duration_ms": 120705,
+  "duration_api_ms": 117585,
+  "total_cost_usd": 1.00746825,
+  "is_error": false,
+  "result": "The verifier passes. The cube is seated in the tray slot and the arm has stopped.\n\n| Check | Result |\n|---|---|\n| in_slot | true |\n| distance from slot centre | 0.98 mm |\n| cube speed | 0 mm/s |\n| held by gripper | false |\n\nWhat happened:\n\n- **First grasp attempt missed.** With the tool centre point at 20 mm height the fingertips sat 10 mm above the cube, outside the pad span. I reopened and descended to 13 mm, and the second close grasped.\n- **Yaw handling.** The cube was rotated about 14 degrees on the bed. I set the wrist roll so the jaws aligned with a cube face, then re-trimmed roll over the slot until the held cube read within a quarter degree of the pocket's yaw.\n- **Placement.** I lowered the cube into the funnel with its centre about 1.5 mm off the slot centre and released. It slid into the pocket and settled under 1 mm from centre with yaw near zero.\n\nThe gripper is open and parked above the tray. Nothing else was moved.",
+  "session_id": "337ea20f-8ef3-4518-8a32-73926a9e1c99",
+  "modelUsage": {
+   "claude-fable-5-1": {
+    "inputTokens": 514,
+    "outputTokens": 8164,
+    "cacheReadInputTokens": 315553,
+    "cacheCreationInputTokens": 25762,
+    "webSearchRequests": 0,
+    "costUSD": 1.00746825,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 64000,
+    "thinkingTokens": 5761,
+    "canonicalModel": "claude-fable-5-1",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "stop_reason": "end_turn"
+ },
+ "stderr_tail": ""
+}

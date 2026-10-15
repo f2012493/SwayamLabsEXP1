@@ -38,6 +38,17 @@ and G-code pause (e.g. Prusa MK4S).
       the high side; by its own rule the sim task is too easy. Next: harder sim
       (no weld forgiveness / smaller funnel) with a new prediction, then hardware.
 - [x] Backlash evidence recorded: `predictions/2026-10-15-arm-repeatability-addendum.md`.
+- [x] Harder sim, task v2 (`SWAYAM_TASK_VERSION=2`: geometric grasp rule, 4 mm funnel, optional
+      2 mm RMS placement noise), pre-registered in
+      `predictions/2026-10-15-sim-pick-place-zero-shot-v2.md`; results in
+      `studies/out/sim_pick_place_zero_shot_v2.md`: v2 8/10 and v2-noise 8/10 (Wilson 95%
+      49-94% each), median 19.5 / 20 calls, $11.61 / $11.06, audited. v2 prediction (7/10)
+      held; the noise prediction (5/10) missed high (difference 0, 95% interval about
+      +-34 points: no evidence of a noise effect at n = 10). All 4 failures: the subject
+      released with the cube underside at or below the pocket top, the weld let it tilt, and
+      the tilt rule refused every re-grasp. Proposed, not pre-registered (needs a decision):
+      v2-noise is the sim reference for the hardware rerun and the sim is not hardened further
+      before the arm arrives.
 - [ ] Buy the day-one items in `SHOPPING.md`; order the printer and cameras.
 - [ ] Day the arm arrives: **film the build** (`baseline/BUILD_FILMING.md`). This is
       Phase 0 step 5 and cannot be redone later.
