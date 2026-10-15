@@ -1,0 +1,87 @@
+# Roadmap
+
+Each phase adds exactly one new class of assembly operation. Each machine built is
+used by the cell afterwards. Exits are judged by sensor verifiers, bought instruments,
+and the `closure-auditor` — never by Claude's own assessment.
+
+Dates are proposals and are meant to be hard. Change them, but do not soften them.
+
+Hardware: SO-101 (ordered 2026-10-15, in transit). No printer or cameras yet — see
+`SHOPPING.md`. Recommended printer: open-frame with flexible PEI sheet, network API
+and G-code pause (e.g. Prusa MK4S).
+
+## Now — before the arm arrives
+
+- [x] Arm control server with safety limits, on the simulated SO-101 (sim backend).
+- [x] Independent safety hook on every arm command.
+- [x] Real-arm backend written against LeRobot (untested until arrival).
+- [x] Clearance-matrix coupon CAD (`cad/coupon.py`).
+- [ ] Buy the day-one items in `SHOPPING.md`; order the printer and cameras.
+- [ ] Day the arm arrives: **film the build** (`baseline/BUILD_FILMING.md`). This is
+      Phase 0 step 5 and cannot be redone later.
+- [ ] Bring up the real backend: verify every item listed at the top of
+      `src/swayam/arm/real.py`, then re-check `config/limits.json` on the real arm.
+
+## Phase 0 — Instrument; build what needs no assembly (target: 2026-11-15)
+
+New operations: harvest, inspect, mount a part on itself.
+
+1. MCP arm server: telemetry (position, load, current, temperature, voltage), limited
+   joint/pose moves, grip, AprilTag poses, on-demand image, e-stop. Claude Code hook
+   rejecting any out-of-limit command.
+2. Hand-eye calibration (ChArUco). Gauge R&R on the measurement first, then
+   ARM ERROR = mean/max error over 100 returns to 5 poses.
+3. Clearance-matrix coupon as a designed experiment. Factors: clearance (0.0–0.6 mm),
+   orientation on the bed, material. Response: slide / press / snap, with force from
+   motor current. Output: a fit table that becomes the CadQuery parameters for every
+   later part.
+4. Zero-shot baseline (AA-Robotics style): Claude drives the arm live on "remove part
+   from bed, place in tray slot", 10 attempts. Report score, time, time to first
+   action, cost, grasp success, irrecoverable mistakes.
+5. Human baselines: time a person on the same task, and on a full SO-101 build broken
+   into a step graph (duration, tolerance, force per step). The step graph is the
+   closure denominator.
+6. Build: snap-on fingertip pads that the arm fits to itself by pressing its jaws into
+   a docking fixture.
+
+**Exit:** arm-made pads beat the stock jaws on grasp success over a fixed 10-object
+set, at least 30 grasps each, Wilson 95% intervals not overlapping; pads fitted with
+zero human touches (auditor-confirmed).
+
+## Phase 1 — Put parts into parts (target: 2027-01-15)
+
+New operations: place, peg-in-hole, snap/press, pause-and-embed. No electricity, no
+screws.
+
+Build: a herringbone planetary gearbox for the STS3215 output. At most 10 printed
+parts and 2 vitamin types, vitamins embedded mid-print. The printer -> kit loop feeds
+the parts.
+
+- Before the first hardware attempt: tolerance stack-up and FMEA.
+- Test stand: a servo drives the input; ratio and backlash from the encoders,
+  torque at slip from motor current. Gauge R&R on the stand.
+- Claude proposes the spec from Phase 0 numbers; I approve it before building.
+
+**Exit:** 30 gearboxes built unattended; Cpk >= 1.33 on backlash and torque at slip;
+5 checked with bought instruments; zero LLM-minutes per cycle; cost per gearbox
+reported against a human at $37.81/h.
+
+## Phase 2 — Add electricity (target: 2027-03-31)
+
+New operations: handle a powered vitamin, blind-mate a connector, write the servo ID
+over the bus, run a powered test.
+
+Build: joint module = STS3215 + Phase 1 gearbox + housing that mates the servo's
+connector as the servo seats (fallback: pogo-pin adapter PCB, counted as a vitamin),
+with bayonet interfaces on both ends.
+
+**Exit:** 10 modules built unattended; each enumerates on the bus, gets its ID written
+by the cell, and passes the sweep / backlash / torque spec; cycle time under
+[X] minutes.
+
+## North star (target: 2027-06-30)
+
+Phase 3: stack joint modules into a child arm in one unattended night. The child
+passes the parent's acceptance test and the Phase 0 grasp benchmark.
+
+Later: the cell's other half — the printers.

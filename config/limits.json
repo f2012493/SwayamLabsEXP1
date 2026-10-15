@@ -1,0 +1,22 @@
+{
+  "_comment": "Software safety limits. Tighter than the hardware range on purpose. Joint angles in degrees (LeRobot SO101Follower with use_degrees=True); gripper in percent open (0-100). Read by both the arm server and the independent Claude Code hook. Re-check every value against the real arm after calibration.",
+  "joints": {
+    "shoulder_pan":  {"min": -100, "max": 100},
+    "shoulder_lift": {"min": -95,  "max": 95},
+    "elbow_flex":    {"min": -92,  "max": 92},
+    "wrist_flex":    {"min": -90,  "max": 90},
+    "wrist_roll":    {"min": -150, "max": 155}
+  },
+  "gripper": {"min": 0, "max": 100},
+  "home": {
+    "shoulder_pan": 0, "shoulder_lift": 0, "elbow_flex": 0,
+    "wrist_flex": 0, "wrist_roll": 0, "gripper": 50
+  },
+  "max_step_deg": 45,
+  "max_speed_deg_s": 90,
+  "min_duration_s": 0.3,
+  "max_duration_s": 10,
+  "min_gripper_height_m": 0.01,
+  "max_reach_m": 0.45,
+  "max_current_ma": 800
+}

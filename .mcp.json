@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "swayam-arm": {
+      "command": "uv",
+      "args": ["run", "swayam-arm-mcp"],
+      "env": { "SWAYAM_BACKEND": "sim" }
+    }
+  }
+}
