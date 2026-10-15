@@ -60,3 +60,10 @@ def test_hook_allows_valid_and_ignores_other_tools():
     assert _run_hook("mcp__swayam-arm__move_joints", {"targets": {"wrist_flex": 10}}).returncode == 0
     assert _run_hook("mcp__swayam-arm__set_gripper", {"percent_open": 150}).returncode == 2
     assert _run_hook("mcp__swayam-arm__get_telemetry", {}).returncode == 0
+
+
+def test_hook_checks_move_gripper_to_targets():
+    assert _run_hook("mcp__swayam-arm__move_gripper_to", {"x_mm": 200, "y_mm": 90, "z_mm": 60}).returncode == 0
+    assert _run_hook("mcp__swayam-arm__move_gripper_to", {"x_mm": 200, "y_mm": 90, "z_mm": -5}).returncode == 2
+    assert _run_hook("mcp__swayam-arm__move_gripper_to", {"x_mm": 500, "y_mm": 0, "z_mm": 50}).returncode == 2
+    assert _run_hook("mcp__swayam-arm__move_gripper_to", {"x_mm": "a", "y_mm": 0, "z_mm": 50}).returncode == 2

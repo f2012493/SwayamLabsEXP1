@@ -24,5 +24,8 @@ def log_event(event: str, **fields) -> None:
     d.mkdir(parents=True, exist_ok=True)
     path = d / f"{time.strftime('%Y-%m-%d')}.jsonl"
     record = {"t": time.time(), "event": event, **fields}
+    tag = os.environ.get("SWAYAM_RUN_TAG")  # experiment harnesses tag their attempts
+    if tag:
+        record["run_tag"] = tag
     with path.open("a") as f:
         f.write(json.dumps(record, default=str) + "\n")

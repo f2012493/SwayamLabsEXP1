@@ -28,6 +28,12 @@ and G-code pause (e.g. Prusa MK4S).
       degree convention, raw registers, no interactive calibration inside MCP).
 - [x] Repeatability protocol scripted (`swayam.experiments.repeatability`), rehearsed in sim.
 - [x] First-72-hours runbook: `docs/DAY_ONE.md`.
+- [x] Task scene in sim (cube on bed, kit-tray slot with funnel), scene poses as
+      numbers, verifier, IK `move_gripper_to`, labelled weld grasp
+      (`sim/so101/scene_task.xml`, `src/swayam/ik.py`).
+- [ ] Zero-shot pick-and-place baseline in sim, 10 attempts, pre-registered in
+      `predictions/2026-10-15-sim-pick-place-zero-shot.md`; results in
+      `studies/out/sim_pick_place_zero_shot.md`.
 - [x] Backlash evidence recorded: `predictions/2026-10-15-arm-repeatability-addendum.md`.
 - [ ] Buy the day-one items in `SHOPPING.md`; order the printer and cameras.
 - [ ] Day the arm arrives: **film the build** (`baseline/BUILD_FILMING.md`). This is

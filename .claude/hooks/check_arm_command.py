@@ -16,6 +16,32 @@ ROOT = os.environ.get("CLAUDE_PROJECT_DIR") or os.path.dirname(
 )
 
 
+def check_gripper_target(args, limits):
+    """Cartesian target: must be on or above the table and inside the reach limit.
+    (The server's own check is finer: it predicts the gripper site height.)"""
+    problems = []
+    vals = {}
+    for k in ("x_mm", "y_mm", "z_mm"):
+        v = args.get(k)
+        if not isinstance(v, (int, float)):
+            problems.append("%s has non-numeric target %r" % (k, v))
+        else:
+            vals[k] = v
+    if len(vals) == 3:
+        if vals["z_mm"] < 0:
+            problems.append("z_mm %s is below the table" % vals["z_mm"])
+        reach = (vals["x_mm"] ** 2 + vals["y_mm"] ** 2) ** 0.5
+        if reach > limits["max_reach_m"] * 1000:
+            problems.append("reach %.0f mm exceeds max_reach_m %s" % (reach, limits["max_reach_m"]))
+    pitch = args.get("pitch_deg", -90)
+    if isinstance(pitch, (int, float)) and not -90 <= pitch <= 90:
+        problems.append("pitch_deg %s outside [-90, 90]" % pitch)
+    if problems:
+        sys.stderr.write("Blocked by safety hook: " + "; ".join(problems) + "\n")
+        return 2
+    return 0
+
+
 def main():
     event = json.load(sys.stdin)
     tool = event.get("tool_name", "")
@@ -27,6 +53,8 @@ def main():
         targets = args.get("targets", {}) or {}
     elif tool.endswith("__set_gripper"):
         targets = {"gripper": args.get("percent_open")}
+    elif tool.endswith("__move_gripper_to"):
+        return check_gripper_target(args, limits)
     else:
         return 0
 

@@ -22,6 +22,9 @@ Machines making machines, starting from one SO-101 arm and Claude Code.
 | Pre-registered predictions | `predictions/` | Judged by the real arm in Phase 0 |
 | CI (tests on every push) | `.github/workflows/tests.yml` | GitHub Actions |
 | Repeatability experiment (sim rehearsal / real measurement) | `src/swayam/experiments/repeatability.py` | Rehearsed in sim |
+| Task scene: cube on bed + kit-tray slot with funnel (sim only) | `sim/so101/scene_task.xml` | `SWAYAM_SCENE=task` |
+| Inverse kinematics and `move_gripper_to` | `src/swayam/ik.py`, `src/swayam/mcp_server.py` | Damped least squares on the official model |
+| Zero-shot pick-and-place baseline harness | `src/swayam/experiments/zero_shot.py` | Fresh `claude -p` per attempt |
 | First-72-hours runbook | `docs/DAY_ONE.md` | For 2026-10-17 |
 
 ## Setup

@@ -12,12 +12,17 @@ import mujoco
 
 from swayam import GRIPPER, JOINTS, REPO_ROOT
 
-SCENE_PATH = REPO_ROOT / "sim" / "so101" / "scene.xml"
+SCENES = {
+    "plain": REPO_ROOT / "sim" / "so101" / "scene.xml",  # arm + floor only
+    "task": REPO_ROOT / "sim" / "so101" / "scene_task.xml",  # + cube on bed + kit tray slot
+}
+SCENE_PATH = SCENES["plain"]
 GRIPPER_SITE = "gripperframe"
 
 
-def load_model() -> mujoco.MjModel:
-    return mujoco.MjModel.from_xml_path(str(SCENE_PATH))
+def load_model(scene: str = "plain") -> mujoco.MjModel:
+    """Load a scene by name ("plain" or "task"). Kinematics are identical in both."""
+    return mujoco.MjModel.from_xml_path(str(SCENES[scene]))
 
 
 def gripper_percent_to_rad(model: mujoco.MjModel, percent: float) -> float:
