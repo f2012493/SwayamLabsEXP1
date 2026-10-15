@@ -31,9 +31,12 @@ and G-code pause (e.g. Prusa MK4S).
 - [x] Task scene in sim (cube on bed, kit-tray slot with funnel), scene poses as
       numbers, verifier, IK `move_gripper_to`, labelled weld grasp
       (`sim/so101/scene_task.xml`, `src/swayam/ik.py`).
-- [ ] Zero-shot pick-and-place baseline in sim, 10 attempts, pre-registered in
+- [x] Zero-shot pick-and-place baseline in sim, 10 attempts, pre-registered in
       `predictions/2026-10-15-sim-pick-place-zero-shot.md`; results in
-      `studies/out/sim_pick_place_zero_shot.md`.
+      `studies/out/sim_pick_place_zero_shot.md`: 10/10 (Wilson 95% 72-100%),
+      median 16 tool calls, 75 s, $0.61 median ($0.76 mean) per attempt. Prediction (7/10) missed on
+      the high side; by its own rule the sim task is too easy. Next: harder sim
+      (no weld forgiveness / smaller funnel) with a new prediction, then hardware.
 - [x] Backlash evidence recorded: `predictions/2026-10-15-arm-repeatability-addendum.md`.
 - [ ] Buy the day-one items in `SHOPPING.md`; order the printer and cameras.
 - [ ] Day the arm arrives: **film the build** (`baseline/BUILD_FILMING.md`). This is

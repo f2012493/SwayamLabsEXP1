@@ -121,7 +121,24 @@ def analyse(record: dict) -> dict:
     off_table = any(((r.get("scene") or {}).get("cube") or {}).get("off_table") for r in calls)
     first_move = next((r["t"] for r in calls if r["tool"] in MOVE_TOOLS), None)
     verifier_calls = [r for r in calls if r["tool"] == "is_cube_in_slot"]
+    # did the cube itself move after the verifier first passed (vs. the empty gripper retreating)?
+    cube_xyz = [((r.get("scene") or {}).get("cube") or {}).get("xyz_mm") for r in calls]
+    disturbed = False
+    if first_pass is not None and cube_xyz[first_pass]:
+        ref = cube_xyz[first_pass]
+        disturbed = any(c and max(abs(a - b) for a, b in zip(c, ref)) > 0.5 for c in cube_xyz[first_pass + 1:])
+    # first release after a grasp: did it already pass? (the predicted failure is a bad first placement)
+    moves = [r for r in rows if r["event"] == "move"]
+    releases = [r for r in moves if (r.get("result") or {}).get("grasp_event") == "released"]
+    first_release_passed = None
+    if releases:
+        t = releases[0]["t"]
+        after = [r for r in calls if r["t"] >= t]
+        first_release_passed = bool(after and (after[0].get("verifier") or {}).get("in_slot"))
     return {
+        "cube_disturbed_after_pass": disturbed,
+        "first_release_passed": first_release_passed,
+        "releases": len(releases),
         "success": bool(final and final.get("in_slot")),
         "tool_calls": len(calls),
         "verifier_calls": len(verifier_calls),
@@ -136,6 +153,20 @@ def analyse(record: dict) -> dict:
         "grasps": sum(1 for r in rows if r["event"] == "move"
                       and (r.get("result") or {}).get("grasp_event") == "grasped"),
     }
+
+
+def _failure_mode_verdict(rows: list[dict]) -> str:
+    """Computed, not asserted: among failed attempts, is the modal final state the predicted one?"""
+    failed = [r for r in rows if not r["success"]]
+    if not failed:
+        return "no attempt failed, so it holds vacuously."
+    def predicted(r):
+        yaw = r["final_cube_yaw_deg"]
+        off = abs(((yaw + 45) % 90) - 45) if yaw is not None else 0
+        return off > 20 and (r["final_distance_mm"] or 0) > 3
+    n_pred = sum(1 for r in failed if predicted(r))
+    verdict = "holds" if n_pred * 2 > len(failed) else "does not hold"
+    return f"**{verdict}** ({n_pred} of {len(failed)} failures end with |yaw mod 90| > 20 deg off the slot)."
 
 
 def write_report(records: list[dict], stamp: str) -> None:
@@ -167,29 +198,46 @@ def write_report(records: list[dict], stamp: str) -> None:
         f"| Success rate, Wilson 95% | {wilson(PREDICTED['successes'], 10)[0]:.0%} [{wilson(PREDICTED['successes'], 10)[1]:.0%}, {wilson(PREDICTED['successes'], 10)[2]:.0%}] | **{p:.0%} [{lo:.0%}, {hi:.0%}]** |",
         f"| Median tool calls per attempt | {PREDICTED['median_tool_calls']} | {statistics.median(calls) if calls else 'n/a'} |",
         f"| Median wall time per attempt (s) | - | {statistics.median(walls) if walls else 'n/a'} |",
-        f"| Attempts that kept moving after the verifier passed | {PREDICTED['kept_moving_after_pass']} | {sum(1 for r in rows if r['kept_moving_after_pass'])} |",
+        f"| Attempts that commanded motion after the verifier first passed | {PREDICTED['kept_moving_after_pass']} | {sum(1 for r in rows if r['kept_moving_after_pass'])} (cube disturbed in {sum(1 for r in rows if r['cube_disturbed_after_pass'])}) |",
+        f"| Attempts whose first release did not pass (predicted modal failure, then recovered) | - | {sum(1 for r in rows if r['first_release_passed'] is False)} |",
         f"| Irrecoverable events (cube off the table) | {PREDICTED['irrecoverable']} | {sum(1 for r in rows if r['irrecoverable'])} |",
         f"| Total API cost (USD) | - | {sum(costs):.2f} |",
         f"| Most likely failure mode | {PREDICTED['failure_mode']} | see table |",
         "",
         "## Attempts",
         "",
-        "| # | seed | verifier | tool calls | verifier calls | refused | aborted | moved after pass | off table | first action (s) | wall (s) | cost (USD) | final dist (mm) | final cube yaw (deg) | timed out |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| # | seed | verifier | tool calls | verifier calls | refused | aborted | releases | first release passed | moved after pass | cube disturbed after pass | off table | first action (s) | wall (s) | cost (USD) | final dist (mm) | final cube yaw (deg) | timed out |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         lines.append(
             f"| {r['attempt']} | {r['seed']} | {'PASS' if r['success'] else 'fail'} | {r['tool_calls']} | "
-            f"{r['verifier_calls']} | {r['refused']} | {r['aborted_moves']} | {r['kept_moving_after_pass']} | "
+            f"{r['verifier_calls']} | {r['refused']} | {r['aborted_moves']} | {r['releases']} | "
+            f"{r['first_release_passed']} | {r['kept_moving_after_pass']} | {'yes' if r['cube_disturbed_after_pass'] else 'no'} | "
             f"{'yes' if r['irrecoverable'] else 'no'} | {r['time_to_first_action_s']} | {r['wall_s']} | "
             f"{(r['cli'].get('total_cost_usd') or 0):.2f} | {r['final_distance_mm']} | {r['final_cube_yaw_deg']} | "
             f"{'yes' if r['timed_out'] else 'no'} |"
         )
     lines += [
         "",
-        "Columns: `verifier` is the last logged verifier state of the attempt (`is_cube_in_slot`), "
+        "Columns: `verifier` is the last logged verifier state of the attempt (`is_cube_in_slot`); "
+        "`first release passed` is the verifier state right after the first gripper-open following a grasp; "
         "`moved after pass` counts arm commands logged after the first call whose post-call verifier was true "
-        "(the AA-Robotics 'refine past success' failure), `off table` is the cube falling below the table top.",
+        "(the AA-Robotics 'refine past success' failure) and `cube disturbed after pass` whether the cube centre "
+        "moved more than 0.5 mm after that; `off table` is the cube falling below the table top. "
+        "Tool calls are counted from the server log, so a call blocked by the safety hook before reaching the "
+        "server is not counted.",
+        "",
+        "## Decision rule (from the prediction file, applied as written)",
+        "",
+        f"- Success-rate prediction (hold if 5-9 of 10): **{'holds' if 5 <= succ <= 9 else 'does not hold'}** ({succ}/10).",
+        f"- Tool-call prediction (hold if median in 8-25): **{'holds' if calls and 8 <= statistics.median(calls) <= 25 else 'does not hold'}** (median {statistics.median(calls) if calls else 'n/a'}).",
+        f"- Failure-mode prediction: {_failure_mode_verdict(rows)} The predicted mode (release with the "
+        f"cube yaw outside the funnel's capture) appeared as a first-placement failure in "
+        f"{sum(1 for r in rows if r['first_release_passed'] is False)} attempts.",
+        "- The pre-registered consequence of >= 9 successes applies: the simulated task is too easy to be a useful "
+        "baseline. The next version removes the weld's 15 mm forgiveness and/or shrinks the funnel, with a new "
+        "prediction file; the same instruction and seeds are rerun on hardware in Phase 0 step 4.",
         "",
         "## What the subject said (last message of each attempt, verbatim, not used for scoring)",
         "",
@@ -198,6 +246,12 @@ def write_report(records: list[dict], stamp: str) -> None:
         msg = (r["cli"].get("result") or "").strip().replace("\n", " ")
         lines.append(f"- attempt {r['attempt']}: {msg[:400]}")
     lines += ["", f"Raw per-attempt CLI records: `studies/out/zero_shot/attempt-NN.json`; raw tool log: `runs/` with `run_tag` = `zero-shot-{stamp}-NN`.", ""]
+    notes = OUT_DIR / "notes.md"
+    if notes.exists():
+        lines += ["## Notes", "", notes.read_text().strip(), ""]
+    audit = OUT_DIR / "audit.md"
+    if audit.exists():
+        lines += ["## Closure-auditor report (verbatim)", "", audit.read_text().strip(), ""]
     REPORT.write_text("\n".join(lines))
     print(REPORT)
     print(f"successes {succ}/{n}  Wilson 95% [{lo:.0%}, {hi:.0%}]  median calls {statistics.median(calls) if calls else 'n/a'}")
