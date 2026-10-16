@@ -35,6 +35,11 @@ map of what exists, and what we already duplicated, is `docs/LANDSCAPE.md`.
       as of 2025 firmware) on that basis, then order this week.
 - [x] Swap `src/swayam/ik.py` for LeRobot's placo kinematics (a core dependency now);
       parity in `studies/out/ik_parity.md`, round-trip tests unchanged, `ik.py` deleted.
+- [ ] **Run Fabrica's planner on the SO-101's own CAD** (`docs/FABRICA.md` §4): get the
+      precedence graph, grasps, generated fixtures, and the list of build steps that
+      violate its assumptions (screws, cables, reorientation, jaw width). That list is
+      the Toy 4 agenda. Also run it on the RoCo 2026 gearbox CAD for Toy 5. Software
+      only; check which stages need a GPU.
 - [ ] Day 1: build the arm with the camera running (`baseline/BUILD_FILMING.md`). The
       step log is the closure denominator and cannot be redone.
 - [ ] Day 2: calibrate, bring up the real backend, sign/zero check (`docs/DAY_ONE.md`).
@@ -61,8 +66,11 @@ ERROR written into `config/limits.json` and the design rules.
 
 Given any part's STL, the engineer generates a locating nest with a two-stage funnel
 (outer sized to placement error, inner to repeatability), prints it, and the arm places
-the part in it. Before designing: read Fabrica's pickup-fixture generator (geometry
-processing + bin packing, CoRL 2025) and fixturemate's rules; reuse, do not reinvent.
+the part in it. Start from Fabrica's fixture generator (MIT licence; top-down grasp
+orientation, bin-packed footprints, extruded cavities with countersunk alignment pads)
+and make it arm-aware: cavity clearance and funnel sized by our measured error. Add
+**print the kit**: the part comes off the printer nested in its own pickup fixture, so
+no human loads a tray.
 Verification parts: Peg-in-Bench pegs and NIST Task Board #1 sizes (4/8/12/16 mm)
 first, so our numbers are comparable; then three SO-101 parts of different shapes.
 Count design iterations to 10/10.
@@ -92,18 +100,23 @@ the cell's default for that step and the reason is written down.
 
 ## Toy 4 — Redesign for the robot (target: 2027-02-28)
 
-One SO-101 part (candidate: the wrist-roll housing) redesigned by the engineer as a
-snap-fit, printable subassembly the arm can put together; printed; assembled by the arm;
-tested against the original part's function.
+The design-closure loop, composed from three published pieces nobody has joined:
+Fabrica's planner says which SO-101 step fails and why → the engineer edits the CAD as
+code, kernel-validated (Embodied CAD's discipline) → print → the arm executes → a
+sensor verifier judges (IDfRA's loop, sensors in place of a VLM) → re-plan. First
+target: the step Fabrica's violation list ranks worst (expected: a screwed or cabled
+joint such as the wrist-roll housing), redesigned as a snap-fit subassembly, installed
+on the arm and used from then on.
 
 **Exit:** closure % on that subassembly; design iterations logged; the redesigned part
 installed on the arm and used from then on.
 
 ## Toy 5 — Design file in, mechanism out (target: 2027-04-15)
 
-The herringbone planetary gearbox for the STS3215 output: printed in place, at most 2
-vitamin types embedded mid-print by the arm (pause-and-embed), kit fed by the
-printer-ejects → tray loop. Tolerance stack-up and FMEA before the first attempt; gauge
+A planetary gearbox for the STS3215 output, starting from the **RoCo 2026 challenge
+gearbox CAD** (sun, three planets, ring; 60 teams' results to compare against), adapted
+to print in place with at most 2 vitamin types embedded mid-print by the arm
+(pause-and-embed), kit fed by the printer-ejects → tray loop. Tolerance stack-up and FMEA before the first attempt; gauge
 R&R on the test stand. Any insertion step is first scored on NIST Task Board #1 peg
 sizes; if learning is needed for insertion, start from NVIDIA AutoMate / IndustReal in
 Isaac Lab, not from scratch.
@@ -125,7 +138,9 @@ sends a design file and receives a fabricated, verified part, with the run log p
 
 Joint modules (servo + Toy 5 gearbox + blind-mate housing) stacked into a child arm in
 one unattended night. The child passes the parent's acceptance test and Toy 2's grasp
-benchmark.
+benchmark. Report multi-step success with **zero interventions** beside Fabrica's
+10–15%, on hardware two orders of magnitude cheaper, with the design loop allowed to
+change the parts.
 
 ## Toy 8 — A product it was never shown (north star 2, target: 2027-12-31)
 
