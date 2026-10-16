@@ -2,11 +2,12 @@
 name = "swayam"
 version = "0.1.0"
 description = "Swayam Labs: machines making machines, starting from an SO-101 arm."
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.12,<3.13"  # lerobot (placo kinematics) needs 3.12+
 dependencies = [
     "mcp>=1.2,<2",  # 2.x renamed FastMCP -> MCPServer; migrate deliberately later
     "mujoco>=3.1",
     "numpy",
+    "lerobot[kinematics]>=0.6.1",  # placo FK/IK for move_gripper_to (sim and real); docs/LANDSCAPE.md s1
 ]
 
 [project.optional-dependencies]

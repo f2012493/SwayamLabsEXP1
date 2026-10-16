@@ -33,8 +33,8 @@ map of what exists, and what we already duplicated, is `docs/LANDSCAPE.md`.
       arm to harvest parts; the printer ejects them. Choose between Bambu A1 + FarmLoop
       (documented unattended loop) and Prusa MK4S (open API but no "set ready" endpoint
       as of 2025 firmware) on that basis, then order this week.
-- [ ] Swap `src/swayam/ik.py` for LeRobot's placo kinematics (`uv sync --extra kinematics`);
-      keep our round-trip tests as the acceptance check; delete ours at parity.
+- [x] Swap `src/swayam/ik.py` for LeRobot's placo kinematics (a core dependency now);
+      parity in `studies/out/ik_parity.md`, round-trip tests unchanged, `ik.py` deleted.
 - [ ] Day 1: build the arm with the camera running (`baseline/BUILD_FILMING.md`). The
       step log is the closure denominator and cannot be redone.
 - [ ] Day 2: calibrate, bring up the real backend, sign/zero check (`docs/DAY_ONE.md`).

@@ -4,8 +4,7 @@ import numpy as np
 import pytest
 
 from swayam import JOINTS
-from swayam.ik import IK, TCP_OFFSET_M, Unreachable
-from swayam.kinematics import Kinematics
+from swayam.kinematics import TCP_OFFSET_M, Kinematics, TcpKinematics, Unreachable
 from swayam.limits import load_limits
 
 LIMITS = load_limits()
@@ -13,7 +12,7 @@ LIMITS = load_limits()
 
 @pytest.fixture(scope="module")
 def ik():
-    return IK()
+    return TcpKinematics()
 
 
 @pytest.fixture(scope="module")

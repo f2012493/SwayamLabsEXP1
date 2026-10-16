@@ -1,1 +1,2 @@
 Copied from https://github.com/TheRobotStudio/SO-ARM100 (Simulation/SO101) at commit a758567. Apache-2.0, see LICENSE.
+so101_new_calib.urdf: same repository and commit (Simulation/SO101/so101_new_calib.urdf), Apache-2.0, unmodified. Loaded by LeRobot's placo RobotKinematics (src/swayam/kinematics.py); its relative mesh paths (assets/*.stl) resolve to the same files MuJoCo uses. LeRobot 0.6.1 ships no SO-101 URDF.

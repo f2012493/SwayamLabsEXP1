@@ -30,7 +30,7 @@ from swayam.arm.sim import (
     task_version,
 )
 from swayam.controller import Controller
-from swayam.ik import IK, Unreachable
+from swayam.kinematics import TcpKinematics, Unreachable
 from swayam.runlog import log_event
 
 mcp = FastMCP("swayam-arm")
@@ -110,9 +110,9 @@ def _ctl() -> Controller:
     return _state["ctl"]
 
 
-def _ik() -> IK:
+def _ik() -> TcpKinematics:
     if "ik" not in _state:
-        _state["ik"] = IK(limits=_ctl().limits)
+        _state["ik"] = TcpKinematics(limits=_ctl().limits)
     return _state["ik"]
 
 

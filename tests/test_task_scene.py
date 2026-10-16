@@ -4,7 +4,7 @@ import numpy as np
 
 from swayam.arm.sim import GRASP_RADIUS_M, SimArm
 from swayam.controller import Controller
-from swayam.ik import IK
+from swayam.kinematics import TcpKinematics
 from swayam.kinematics import load_model
 
 
@@ -66,7 +66,7 @@ def _goto(arm, ik, x, y, z, roll=None):
 def test_scripted_pick_and_place_passes_the_verifier():
     """The loop is feasible with the tools alone; also pins down the weld grasp semantics."""
     arm = SimArm(scene="task", cube_seed=0)
-    ik = IK()
+    ik = TcpKinematics()
     sc = arm.scene()
     cx, cy, _ = sc["cube"]["xyz_mm"]
     sx, sy, sz = sc["slot"]["centre_xyz_mm"]

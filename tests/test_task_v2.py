@@ -20,7 +20,7 @@ from swayam.arm.sim import (
     in_slot_rule,
     task_version,
 )
-from swayam.ik import IK
+from swayam.kinematics import TcpKinematics
 
 
 def _goto(arm, ik, x, y, z, roll=None):
@@ -89,7 +89,7 @@ def test_jaw_gap_tracks_the_opening():
 def test_v2_scripted_pick_and_place_passes_the_verifier():
     """Feasible with the tools alone under the v2 rule and the 4 mm funnel."""
     arm = SimArm(scene="task", cube_seed=0, task_version=2)
-    ik = IK()
+    ik = TcpKinematics()
     sc = arm.scene()
     cx, cy, _ = sc["cube"]["xyz_mm"]
     sx, sy, sz = sc["slot"]["centre_xyz_mm"]
@@ -116,7 +116,7 @@ def test_v2_scripted_pick_and_place_passes_the_verifier():
 
 def test_v2_refuses_what_v1_accepted():
     """The v1 audit's artefact: a tilted cube grasped at 40 % open from 12.6 mm away."""
-    ik = IK()
+    ik = TcpKinematics()
     for version in (1, 2):
         arm = SimArm(scene="task", cube_seed=0, task_version=version)
         cx, cy, _ = arm.scene()["cube"]["xyz_mm"]
@@ -134,7 +134,7 @@ def test_v2_refuses_what_v1_accepted():
 
 def test_v2_rule_rejects_each_geometric_fault_separately():
     arm = SimArm(scene="task", cube_seed=0, task_version=2)
-    ik = IK()
+    ik = TcpKinematics()
     cx, cy, _ = arm.scene()["cube"]["xyz_mm"]
     arm.move({"gripper": 100}, 0.5)
     _goto(arm, ik, cx, cy, 60)
