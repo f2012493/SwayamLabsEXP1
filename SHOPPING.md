@@ -1,4 +1,4 @@
-# Shopping list (before Phase 0)
+# Shopping list (before Toy 0)
 
 Ordered by when you need it. Check current prices and stock yourself; nothing here
 is a brand endorsement beyond the reasons given.
@@ -16,9 +16,9 @@ is a brand endorsement beyond the reasons given.
 
 Check whether your SO-101 kit includes a **leader arm** (for teleoperation), the
 **servo driver board**, and **power supplies**. If no leader arm, add one later —
-it is only needed for recording demonstrations (Phase 1 learned policies).
+it is only needed for recording demonstrations (Toy 3 learned policies).
 
-## Needed for Phase 0 (within ~2 weeks)
+## Needed for Toys 1–2 (within ~2 weeks)
 
 | Item | Why | Notes |
 |---|---|---|
@@ -30,7 +30,7 @@ it is only needed for recording demonstrations (Phase 1 learned policies).
 | ChArUco calibration board on a flat rigid backing | Hand-eye calibration | Print on paper and glue to glass, acrylic or aluminium; flatness matters more than print quality |
 | AprilTag sheet (tag36h11 family), matte paper | Positions of trays, fixtures, printer bed | Laser print; avoid glossy (reflections) |
 
-## Needed for Phase 1
+## Needed for Toys 3–5
 
 | Item | Why |
 |---|---|

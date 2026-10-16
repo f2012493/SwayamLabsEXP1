@@ -33,7 +33,7 @@ Fill the remaining columns per step:
 - `force`: low / medium / high.
 - `vitamin`: yes if a bought part (servo, screw, board, cable) is handled.
 - `robot_feasible_now`: yes / with-fixture / with-redesign / no — a first guess,
-  revised once Phase 0 measures the arm's real error.
+  revised once Toy 0 measures the arm's real error.
 
 Total minutes = the baseline. Claude turns this into the step graph in
 `ROADMAP.md` Toy 0.

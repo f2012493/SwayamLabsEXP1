@@ -61,7 +61,7 @@ be true for it to happen, then test the cheapest of those first.
 - **Two-stage fits.** Camera-guided placement is several times less precise than
   returning to a taught pose (error budget: ~3.5 mm vs ~0.5 mm). So every fixture has
   a wide outer funnel sized to placement error, and the precise fit inside relies on
-  same-direction repeatability. Until Phase 0 measures the real arm, use the
+  same-direction repeatability. Until Toy 0 measures the real arm, use the
   error-budget values: outer funnel >= 8 mm, inner lead-in >= 1.5 mm.
 - **Predict, then measure.** Before any experiment on hardware, write the prediction
   and decision rule in `predictions/` and commit it. Never edit a prediction after the

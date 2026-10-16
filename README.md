@@ -31,7 +31,7 @@ measurements; failures beside successes; every result is audited and replayable.
 | Clearance-matrix coupon (first experiment) | `cad/coupon.py` | Generates `cad/out/*.stl` |
 | Red-team auditor | `.claude/agents/closure-auditor.md` | Ready |
 | Arm error-budget study | `src/swayam/studies/error_budget.py` | Predicts repeatability and placement error |
-| Pre-registered predictions | `predictions/` | Judged by the real arm in Phase 0 |
+| Pre-registered predictions | `predictions/` | Judged by the real arm in Toy 0 |
 | CI (tests on every push) | `.github/workflows/tests.yml` | GitHub Actions |
 | Repeatability experiment (sim rehearsal / real measurement) | `src/swayam/experiments/repeatability.py` | Rehearsed in sim |
 | Task scene: cube on bed + kit-tray slot with funnel (sim only) | `sim/so101/scene_task.xml` | `SWAYAM_SCENE=task` |
