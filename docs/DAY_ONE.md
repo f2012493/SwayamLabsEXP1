@@ -11,7 +11,7 @@ before the arm existed.** Everything here serves that.
 - [ ] `uv sync --extra real` already done; `uv run lerobot-find-port --help` works.
 - [ ] Read `baseline/BUILD_FILMING.md`.
 
-## Day 1: build and film (Phase 0 step 5, the closure denominator)
+## Day 1: build and film (Toy 0, the closure denominator)
 
 1. Camera on, then open the box. One continuous recording.
 2. Build the follower first, following TheRobotStudio's guide. Log every step in
@@ -46,7 +46,7 @@ before the arm existed.** Everything here serves that.
 6. Set `.mcp.json` to the real backend only after all of the above; first command
    from Claude is `get_telemetry`, second is `home` with your hand on the switch.
 
-## Day 3: the measurement (Phase 0 step 2)
+## Day 3: the measurement (Toy 0)
 
 1. Warm up: 10 minutes of slow motion across the work zone.
 2. Rehearse once in sim: `uv run python -m swayam.experiments.repeatability --backend sim --returns 2`

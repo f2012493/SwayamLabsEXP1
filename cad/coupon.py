@@ -1,4 +1,4 @@
-"""Clearance-matrix coupon: the first designed experiment (ROADMAP Phase 0, step 3).
+"""Clearance-matrix coupon: the first designed experiment (ROADMAP Toy 1: the first part for fixture autogen).
 
 One plate with 7 holes whose clearance over the peg steps from 0.0 to 0.6 mm, plus a
 peg with a square grip head the SO-101 can hold. Print the peg twice, once standing

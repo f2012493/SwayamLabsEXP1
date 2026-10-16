@@ -36,4 +36,4 @@ Fill the remaining columns per step:
   revised once Phase 0 measures the arm's real error.
 
 Total minutes = the baseline. Claude turns this into the step graph in
-`ROADMAP.md` Phase 0 step 5.
+`ROADMAP.md` Toy 0.

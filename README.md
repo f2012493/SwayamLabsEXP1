@@ -1,11 +1,23 @@
 # Swayam Labs
 
-Machines making machines, starting from one SO-101 arm and Claude Code.
+**Self-made machines, made in the open.**
 
-- `CLAUDE.md` — Claude's standing mandate, rules and methods.
-- `ROADMAP.md` — phases, exit criteria and target dates.
+Swayam Labs builds the smallest open "design file in, machine out" cell, and measures
+how much of that loop an AI engineer closes. One cheap arm (SO-101), one printer, Claude
+Code as the engineer, and a public log of how far that goes. *Swayam* (स्वयं) means
+"self": machines that make themselves, and a person who decided he could make such
+machines without permission.
+
+Two numbers: **closure %** (share of a machine's build done with no human hands) and
+**design iterations per week with no human CAD**. Predictions are published before
+measurements; failures beside successes; every result is audited and replayable.
+
+- `docs/DIRECTION.md` — where the field is going and the gap this lab works on.
+- `ROADMAP.md` — the toy ladder: eight experiments, each adding one capability.
+- `CLAUDE.md` — the AI engineer's standing mandate, rules and methods.
 - `SHOPPING.md` — what to buy, in the order you need it.
-- `baseline/` — how to film your own SO-101 build (the human baseline).
+- `baseline/` — how to film your own SO-101 build (the closure denominator).
+- `predictions/` — pre-registered predictions and their verdicts.
 
 ## What exists today
 
