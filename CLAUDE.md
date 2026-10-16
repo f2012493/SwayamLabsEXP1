@@ -27,11 +27,19 @@ Current toy and exit criteria: see `ROADMAP.md`.
 ## Adopt, don't build
 
 Learned skills: LeRobot + SmolVLA or GR00T fine-tunes, never our own policy
-architecture. Agent-hardware interface: shape every tool as a Model Hardware Standard
-style capability description (what it measures, what it adjusts, its limits) plus
+architecture. Kinematics: LeRobot's placo `RobotKinematics`, not our own IK.
+Agent-hardware interface: shape every tool as a Model Hardware Standard style
+capability description (what it measures, what it adjusts, its limits) plus
 deterministic scripts. CAD: agentcad (build123d) or cad-skill (CadQuery). Demonstration
-data: a printed UMI-style handheld gripper and a phone, not teleop hours. Simulation:
-kinematics checks only; sim work is frozen unless it unblocks a hardware toy.
+data: a printed Fast-UMI gripper and a phone, not teleop hours. Insertion verifiers:
+NIST Task Board #1 and Peg-in-Bench geometries. Part harvesting: the printer ejects;
+the arm picks from a tray. Simulation: kinematics checks only; frozen unless it
+unblocks a hardware toy. The map: `docs/LANDSCAPE.md`.
+
+**Prior-art check before building anything.** Thirty minutes, then three lines in the
+commit: what exists, why we are or are not using it, what is new. We already remade
+LeRobot's IK and bounds once; "I didn't know it existed" is not an acceptable reason
+twice.
 
 ## Boundary
 

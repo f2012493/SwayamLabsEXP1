@@ -13,6 +13,8 @@ Two numbers: **closure %** (share of a machine's build done with no human hands)
 measurements; failures beside successes; every result is audited and replayable.
 
 - `docs/DIRECTION.md` — where the field is going and the gap this lab works on.
+- `docs/LANDSCAPE.md` — what already exists at every layer, what we duplicated, what
+  remains ours.
 - `ROADMAP.md` — the toy ladder: eight experiments, each adding one capability.
 - `CLAUDE.md` — the AI engineer's standing mandate, rules and methods.
 - `SHOPPING.md` — what to buy, in the order you need it.
